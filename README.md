@@ -50,3 +50,23 @@ $ yarn run test:e2e
 # test coverage
 $ yarn run test:cov
 ```
+
+## Intuit Authentication & Authorization
+
+The Intuit API requires [OAuth 2.0 authorization](https://developer.intuit.com/app/developer/qbo/docs/develop/authentication-and-authorization) for all connecting apps.  This **requires** a manual user consent interaction every 101 days, at most, due to the expiration time of the `rememberToken` Intuit API assigns.
+
+The following is the current implementation of Connector to handle Intuit API auth:
+
+1. For a fresh install with no existing database record a request to Intuit API will fail due to bad auth.
+2. A user must manually authorize the Connector app (specifically, the `callback` endpoint it defines).
+3. At present, this is accomplished by sending a `GET` request to `/v1/intuit/authorize`.  This creates an authorization URL with proper scope in the [intuit.controller@authorize()](src/intuit/intuit.controller.ts#L42) and redirects to the user to that authorization URL (on the Intuit site).
+4. The user then elects to consent for the Connector app to be given authorization to the specified account.
+5. The user is redirects to the `callback` endpoint which invokes the [intuit.controller@callback()](src/intuit/intuit.controller.ts#L63) method.  This method generates an async `accessToken` and `refreshToken`, which is added to (or updated) in the database for future requests.
+6. An `accessToken` expires after only 60 minutes, while a `refreshToken` (which can be used to programmatically generate a new `acessToken`) lasts 101 days.
+7. Thus, all future requests while a valid `refreshToken` exists will use that to generate `accessTokens` without the need for user consent.
+8. Eventually, the app will have no valid `refreshToken` and must be manually consented by the user.
+
+### TODO
+
+- [ ] Come up with a private method for an Admin to manually authorize that isn't a public API endpoint (i.e. '/v1/intuit/authorize').
+- [ ] Add backend monitor that will immediately alert Admin(s) when Intuit auth tokens have expired.

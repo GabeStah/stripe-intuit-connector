@@ -1,4 +1,4 @@
-export class SettingDto {
+export class SettingsDto {
   readonly services: {
     readonly intuit: {
       readonly accessToken: string;

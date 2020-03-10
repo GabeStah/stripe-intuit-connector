@@ -7,7 +7,7 @@ export interface IntuitSetting {
   readonly refreshTokenExpiration: number;
 }
 
-export interface Setting extends Document {
+export interface Settings extends Document {
   readonly services: {
     intuit: IntuitSetting;
   };

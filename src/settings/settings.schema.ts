@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-export const SettingSchema = new mongoose.Schema({
+export const SettingsSchema = new mongoose.Schema({
   services: {
     intuit: {
       accessToken: String,

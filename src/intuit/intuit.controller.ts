@@ -1,16 +1,18 @@
-import { Controller, Get, Post, Req, Res } from '@nestjs/common';
+import { Controller, Get, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { IntuitService } from 'src/intuit/intuit.service';
 import OAuthClient from 'intuit-oauth';
-import { IntuitSetting } from 'src/setting/setting.interface';
+import { IntuitSetting } from 'src/settings/settings.interface';
+import { SettingsService } from 'src/settings/settings.service';
 
 @Controller('intuit')
 export class IntuitController {
   private oauthClient: any;
   constructor(
     private readonly service: IntuitService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly settingsService: SettingsService
   ) {
     // Instance of client
     this.oauthClient = new OAuthClient({
@@ -74,14 +76,14 @@ export class IntuitController {
       refreshToken: result.refresh_token
     };
 
-    const updated = await this.service.updateSettings({
+    const updated = await this.settingsService.updateSettings({
       services: { intuit: intuitSetting }
     });
 
     if (updated) {
       return 'Intuit authorization settings updated in database.';
     } else {
-      const created = await this.service.createSettings({
+      const created = await this.settingsService.createSettings({
         services: { intuit: intuitSetting }
       });
 

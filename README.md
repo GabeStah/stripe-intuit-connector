@@ -16,7 +16,7 @@ Make sure Connector app is [running](#running).
 
 1. Install [Stripe CLI](https://stripe.com/docs/stripe-cli).
 2. Run `stripe login` to authenticate.
-3. Run `stripe listen --forward-to http://localhost:4321/api/stripe/webhook` to point Stripe webhooks to Connector API endpoint.
+3. Run `stripe listen --forward-to http://localhost:4321/v1/stripe/webhook` to point Stripe webhooks to Connector API endpoint.
 4. Open a new terminal.
 5. Run `stripe trigger <event>`, e.g. `stripe trigger payment_intent.created`.
 6. Stripe will generate a new trigger an event and webhook of specified type, which Connector will pickup at `@Post` method associated with endpoint.

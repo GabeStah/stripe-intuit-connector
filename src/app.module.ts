@@ -6,8 +6,11 @@ import { ConfigModule } from '@nestjs/config';
 import { SetBodyParser } from 'src/middleware/set-body-parser.middleware';
 import configuration from 'src/config/configuration';
 import { IntuitModule } from 'src/intuit/intuit.module';
-import { MongooseModule } from '@nestjs/mongoose';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { SettingsModule } from 'src/settings/settings.module';
+import { UsersModule } from 'src/users/users.module';
+import { WinstonModule } from 'nest-winston';
+import winston from 'winston';
 
 @Module({
   imports: [
@@ -15,10 +18,44 @@ import { SettingsModule } from 'src/settings/settings.module';
     IntuitModule,
     SettingsModule,
     StripeModule,
-    MongooseModule.forRoot(configuration().db.mongo.uri, {
-      useFindAndModify: false,
-      useNewUrlParser: true,
+    UsersModule,
+    TypeOrmModule.forRoot({
+      type: 'mongodb',
+      host: '127.0.0.1',
+      port: 4433,
+      database: 'connector',
+      // entities: [User],
+      // Loads all entities imported via TypeOrmModule.forFeature.
+      autoLoadEntities: true,
+      synchronize: true,
       useUnifiedTopology: true
+    }),
+    WinstonModule.forRoot({
+      level: 'info',
+      format: winston.format.json(),
+      defaultMeta: { service: 'connector' },
+      levels: {
+        emerg: 0,
+        alert: 1,
+        crit: 2,
+        error: 3,
+        warning: 4,
+        notice: 5,
+        info: 6,
+        debug: 7,
+        webhook: 8
+      },
+      transports: [
+        new winston.transports.File({
+          filename: 'logs/error.log',
+          level: 'error'
+        }),
+        new winston.transports.File({ filename: 'logs/combined.log' }),
+        new winston.transports.File({
+          filename: `logs/webhook/webhook-${new Date().getFullYear()}-${new Date().getMonth()}-${new Date().getDate()}.log`,
+          level: 'webhook'
+        })
+      ]
     })
   ],
   controllers: [AppController],

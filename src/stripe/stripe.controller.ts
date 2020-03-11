@@ -5,6 +5,8 @@ import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
 import { IntuitService } from 'src/intuit/intuit.service';
 import { Logger } from 'winston';
+import { StripeCustomerToIntuitCustomer } from 'src/adapters/intuit-stripe/stripe-customer-to-intuit-customer';
+import { AxiosResponse } from 'axios';
 
 @Controller('stripe')
 export class StripeController {
@@ -12,11 +14,15 @@ export class StripeController {
     private readonly intuitService: IntuitService,
     @Inject('winston') private readonly logger: Logger,
     private readonly service: StripeService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly customerAdapter: StripeCustomerToIntuitCustomer
   ) {}
 
   @Post('webhook')
-  webhook(@Req() request: Request, @Res() response: Response): string {
+  async webhook(
+    @Req() request: Request,
+    @Res() response: Response
+  ): Promise<AxiosResponse<string> | string> {
     const stripe = new Stripe(
       this.configService.get<string>('services.stripe.secret'),
       {
@@ -32,23 +38,26 @@ export class StripeController {
         request.headers['stripe-signature'],
         this.configService.get<string>('services.stripe.webhook.secret')
       );
+
+      this.logger.log({ level: 'webhook', message: event });
+
+      switch (event.type) {
+        case 'customer.updated':
+          // TODO: http://gitlab.solarixdigital.com/solarix/wcasg/connector/snippets/5
+          break;
+        case 'payment_intent.created':
+          break;
+        case 'customer.created':
+          const intuitCustomer = this.customerAdapter.from(event.data.object);
+          const createdCustomer = this.intuitService.createCustomer(
+            intuitCustomer
+          );
+          return createdCustomer;
+        default:
+      }
     } catch (err) {
-      return `Webhook Error: ${err.message}`;
+      this.logger.error(err);
+      return `Webhook Error: ${err}`;
     }
-
-    switch (event.type) {
-      case 'customer.updated':
-        // TODO: http://gitlab.solarixdigital.com/solarix/wcasg/connector/snippets/5
-        break;
-      case 'payment_intent.created':
-        break;
-      case 'customer.created':
-        return event;
-      default:
-    }
-
-    this.logger.log({ level: 'webhook', message: event });
-
-    return JSON.stringify(event);
   }
 }

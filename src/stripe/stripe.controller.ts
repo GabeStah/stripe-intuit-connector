@@ -7,6 +7,7 @@ import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from 'winston';
 import configuration from 'src/config/configuration';
+import uniqid from 'uniqid';
 
 @Controller('stripe')
 export class StripeController {
@@ -34,7 +35,10 @@ export class StripeController {
       );
 
       if (IsStripeEvent(event.type)) {
-        await this.queue.add(event.type, event);
+        await this.queue.add(event.type, event, {
+          jobId: uniqid(),
+          attempts: 5
+        });
       }
     } catch (err) {
       this.logger.error(err);

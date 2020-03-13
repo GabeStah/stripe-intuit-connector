@@ -41,8 +41,8 @@ import { StripeWebhookModule } from 'src/queue/stripe/stripe-webhook.module';
         warning: 4,
         notice: 5,
         info: 6,
-        debug: 7,
-        queue: 8
+        queue: 7,
+        debug: 8
       },
       transports: [
         new winston.transports.File({
@@ -50,10 +50,22 @@ import { StripeWebhookModule } from 'src/queue/stripe/stripe-webhook.module';
           level: 'error'
         }),
         new WinstonDailyRotateFile({
+          dirname: 'logs/debug',
+          filename: 'debug-%DATE%.log',
+          datePattern: 'YYYY-MM-DD',
+          zippedArchive: true,
+          json: true,
+          maxSize: '50m',
+          maxFiles: '14d',
+          utc: true,
+          level: 'debug'
+        }),
+        new WinstonDailyRotateFile({
           dirname: 'logs/queue',
           filename: 'queue-%DATE%.log',
           datePattern: 'YYYY-MM-DD',
           zippedArchive: true,
+          json: true,
           maxSize: '50m',
           maxFiles: '14d',
           utc: true,

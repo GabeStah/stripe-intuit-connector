@@ -2,11 +2,9 @@ import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { StripeController } from 'src/stripe/stripe.controller';
 import configuration from 'src/config/configuration';
-import { PaymentIntentSucceededProcessor } from 'src/queue/stripe/processors/payment_intent.succeeded';
-import { PaymentIntentCreatedProcessor } from 'src/queue/stripe/processors/payment_intent.created';
-import { CustomerCreatedProcessor } from 'src/queue/stripe/processors/customer.created';
 import { IntuitModule } from 'src/intuit/intuit.module';
 import { StripeCustomerToIntuitCustomer } from 'src/adapters/intuit-stripe/stripe-customer-to-intuit-customer';
+import { StripeWebhookProcessor } from 'src/queue/stripe/stripe-webhook.processor';
 
 @Module({
   imports: [
@@ -21,12 +19,7 @@ import { StripeCustomerToIntuitCustomer } from 'src/adapters/intuit-stripe/strip
     IntuitModule
   ],
   controllers: [StripeController],
-  providers: [
-    CustomerCreatedProcessor,
-    PaymentIntentSucceededProcessor,
-    PaymentIntentCreatedProcessor,
-    StripeCustomerToIntuitCustomer
-  ],
+  providers: [StripeWebhookProcessor, StripeCustomerToIntuitCustomer],
   exports: [IntuitModule]
 })
 export class StripeWebhookModule {}

@@ -29,7 +29,8 @@ export class StripeCustomerToIntuitCustomer extends Adapter {
       PrimaryEmailAddr: {
         Address: this.get('email')
       },
-      DisplayName: this.get('name'),
+      DisplayName: `${this.get('name')} [${this.get('id')}]`,
+      GivenName: this.get('name'),
       Notes: JSON.stringify({
         stripe: {
           id: this.get('id'),

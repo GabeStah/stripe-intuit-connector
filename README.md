@@ -10,22 +10,7 @@ Based on [Nest](https://github.com/nestjs/nest) TypeScript framework.
 $ npm install
 ```
 
-## Development
-
-Make sure Connector app is [running](#running).
-
-1. Install [Stripe CLI](https://stripe.com/docs/stripe-cli).
-2. Run `stripe login` to authenticate.
-3. Run `stripe listen --forward-to http://localhost:4321/v1/stripe/webhook` to point Stripe webhooks to Connector API endpoint.
-4. Open a new terminal.
-5. Run `stripe trigger <event>`, e.g. `stripe trigger payment_intent.created`.
-6. Stripe will generate a new trigger an event and webhook of specified type, which Connector will pickup at `@Post` method associated with endpoint.
-
-### Debugging
-
-Run `./node_modules/@nestjs/cli/bin/nest.js start --watch` targeting `src/main.ts` file in whatever IDE/dev environment you use.
-
-## Running
+## Running Connector
 
 ```bash
 # development
@@ -37,6 +22,32 @@ $ yarn run start:dev
 # production mode
 $ yarn run start:prod
 ```
+
+## Development
+
+### Connect to MongoDB
+
+Open an SSH tunnel connect to `wcasg-audit-mongo-a` Mongo server.
+  - `yarn run dev:db:mongo:ssh-tunnel` to SSH as `root`.
+
+### Connect to Redis
+
+If Docker installed run Redis in Docker container:
+- Attached: `yarn run dev:db:redis`
+- Dettached: `yarn run dev:db:redis:detached`
+
+### Stripe Webhooks
+
+1. Install [Stripe CLI](https://stripe.com/docs/stripe-cli).
+2. Run `stripe login` to authenticate.
+3. Run `stripe listen --forward-to http://localhost:4321/v1/stripe/webhook` to point Stripe webhooks to Connector API endpoint.
+4. Open a new terminal.
+5. Run `stripe trigger <event>`, e.g. `stripe trigger payment_intent.created`.
+6. Stripe will generate a new trigger an event and webhook of specified type, which Connector will pickup at `@Post` method associated with endpoint.
+
+### Debugging
+
+Run `./node_modules/@nestjs/cli/bin/nest.js start --watch` targeting `src/main.ts` file in whatever IDE/dev environment you use.
 
 ## Testing
 

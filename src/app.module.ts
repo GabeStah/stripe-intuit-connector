@@ -1,23 +1,22 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { StripeModule } from 'src/stripe/stripe.module';
 import { ConfigModule } from '@nestjs/config';
 import { SetBodyParser } from 'src/middleware/set-body-parser.middleware';
 import configuration from 'src/config/configuration';
-import { IntuitModule } from 'src/intuit/intuit.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SettingsModule } from 'src/settings/settings.module';
 import { UsersModule } from 'src/users/users.module';
 import { WinstonModule } from 'nest-winston';
 import winston from 'winston';
+import WinstonDailyRotateFile from 'winston-daily-rotate-file';
+import { StripeWebhookModule } from 'src/queue/stripe/stripe-webhook.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
-    IntuitModule,
     SettingsModule,
-    StripeModule,
+    StripeWebhookModule,
     UsersModule,
     TypeOrmModule.forRoot({
       type: 'mongodb',
@@ -43,24 +42,28 @@ import winston from 'winston';
         notice: 5,
         info: 6,
         debug: 7,
-        webhook: 8
+        queue: 8
       },
       transports: [
         new winston.transports.File({
           filename: 'logs/error.log',
           level: 'error'
         }),
-        new winston.transports.File({ filename: 'logs/combined.log' }),
-        new winston.transports.File({
-          filename: `logs/webhook/webhook-${new Date().getFullYear()}-${new Date().getMonth()}-${new Date().getDate()}.log`,
-          level: 'webhook'
+        new WinstonDailyRotateFile({
+          dirname: 'logs/queue',
+          filename: 'queue-%DATE%.log',
+          datePattern: 'YYYY-MM-DD',
+          zippedArchive: true,
+          maxSize: '50m',
+          maxFiles: '14d',
+          utc: true,
+          level: 'queue'
         })
       ]
     })
   ],
   controllers: [AppController],
-  providers: [AppService],
-  exports: [IntuitModule, StripeModule]
+  providers: [AppService]
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

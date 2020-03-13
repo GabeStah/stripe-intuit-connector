@@ -2,6 +2,7 @@ import { Controller, Get, Inject, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { IntuitService } from 'src/intuit/intuit.service';
 import { Logger } from 'winston';
+import { MessagePattern } from '@nestjs/microservices';
 
 @Controller('intuit')
 export class IntuitController {
@@ -43,5 +44,16 @@ export class IntuitController {
   @Get('callback')
   async callback(@Req() req: Request): Promise<string> {
     return this.service.callback(req);
+  }
+
+  @Get('redis')
+  redis(): any {
+    return this.service.redis();
+  }
+
+  @MessagePattern({ type: 'redis_test' })
+  redisMessage(data: any): string {
+    console.log(data);
+    return data;
   }
 }

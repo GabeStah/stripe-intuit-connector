@@ -1,15 +1,26 @@
-import { HttpService, Inject, Injectable, Req } from '@nestjs/common';
+import {
+  HttpService,
+  Inject,
+  Injectable,
+  OnModuleInit,
+  Req
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { SettingsService } from 'src/settings/settings.service';
 import OAuthClient from 'intuit-oauth';
 import { Request } from 'express';
-import { AxiosError, AxiosResponse } from 'axios';
+import { AxiosResponse } from 'axios';
 import { Logger } from 'winston';
 import { Settings } from 'src/settings/settings.entity';
+import { Client, ClientRedis } from '@nestjs/microservices';
+import configuration from 'src/config/configuration';
 
 @Injectable()
-export class IntuitService {
+export class IntuitService implements OnModuleInit {
   private oauthClient: any;
+
+  @Client(configuration().db.redis.options)
+  private clientRedis: ClientRedis;
 
   constructor(
     private readonly configService: ConfigService,
@@ -31,6 +42,11 @@ export class IntuitService {
         this.configService.get<string>('routes.prefix') +
         this.configService.get<string>('routes.intuit.callback')
     });
+  }
+
+  async onModuleInit() {
+    // Connect your client to the redis server on startup.
+    await this.clientRedis.connect();
   }
 
   /**
@@ -215,5 +231,12 @@ export class IntuitService {
         `Cannot obtain valid Intuit authorization; manual authorization required.`
       );
     }
+  }
+
+  async redis() {
+    // Send data to all redis_test listeners
+    return await this.clientRedis
+      .send({ type: 'redis_test' }, { id: 1, name: 'new test name' })
+      .toPromise();
   }
 }

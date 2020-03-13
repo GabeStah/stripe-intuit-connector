@@ -1,63 +1,43 @@
-import { Controller, Get, Inject, Post, Req, Res } from '@nestjs/common';
-import { StripeService } from './stripe.service';
-import { Request, Response } from 'express';
+import { InjectQueue } from '@nestjs/bull';
+import { Controller, Inject, Post, Req } from '@nestjs/common';
+import { Queue } from 'bull';
+import { IsStripeEvent } from '../queue/stripe/stripe-webhook.constants';
+import { Request } from 'express';
 import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
-import { IntuitService } from 'src/intuit/intuit.service';
 import { Logger } from 'winston';
-import { StripeCustomerToIntuitCustomer } from 'src/adapters/intuit-stripe/stripe-customer-to-intuit-customer';
-import { AxiosResponse } from 'axios';
+import configuration from 'src/config/configuration';
 
 @Controller('stripe')
 export class StripeController {
   constructor(
-    private readonly intuitService: IntuitService,
     @Inject('winston') private readonly logger: Logger,
-    private readonly service: StripeService,
-    private readonly configService: ConfigService,
-    private readonly customerAdapter: StripeCustomerToIntuitCustomer
+    @InjectQueue(configuration().queue.stripe.name)
+    private readonly queue: Queue,
+    private readonly configService: ConfigService
   ) {}
 
   @Post('webhook')
-  async webhook(
-    @Req() request: Request,
-    @Res() response: Response
-  ): Promise<AxiosResponse<string> | string> {
-    const stripe = new Stripe(
-      this.configService.get<string>('services.stripe.secret'),
-      {
-        apiVersion: '2020-03-02'
-      }
-    );
-
-    let event;
-
+  async webhook(@Req() request: Request) {
     try {
-      event = stripe.webhooks.constructEvent(
+      const stripe = new Stripe(
+        this.configService.get<string>('services.stripe.secret'),
+        {
+          apiVersion: '2020-03-02'
+        }
+      );
+
+      const event = stripe.webhooks.constructEvent(
         request.body,
         request.headers['stripe-signature'],
         this.configService.get<string>('services.stripe.webhook.secret')
       );
 
-      this.logger.log({ level: 'webhook', message: event });
-
-      switch (event.type) {
-        case 'customer.updated':
-          // TODO: http://gitlab.solarixdigital.com/solarix/wcasg/connector/snippets/5
-          break;
-        case 'payment_intent.created':
-          break;
-        case 'customer.created':
-          const intuitCustomer = this.customerAdapter.from(event.data.object);
-          const createdCustomer = this.intuitService.createCustomer(
-            intuitCustomer
-          );
-          return createdCustomer;
-        default:
+      if (IsStripeEvent(event.type)) {
+        await this.queue.add(event.type, event);
       }
     } catch (err) {
       this.logger.error(err);
-      return `Webhook Error: ${err}`;
     }
   }
 }

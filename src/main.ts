@@ -7,6 +7,14 @@ async function bootstrap() {
     bodyParser: false
   });
   app.setGlobalPrefix(configuration().routes.prefix);
+
+  // Add Redis microservice
+  app.connectMicroservice(configuration().db.redis.options);
+
+  // Start microservices
+  await app.startAllMicroservicesAsync();
+
+  // Start app
   await app.listen(configuration().port);
 }
 bootstrap();

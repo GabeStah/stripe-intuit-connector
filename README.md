@@ -45,6 +45,10 @@ If Docker installed run Redis in Docker container:
 5. Run `stripe trigger <event>`, e.g. `stripe trigger payment_intent.created`.
 6. Stripe will generate a new trigger an event and webhook of specified type, which Connector will pickup at `@Post` method associated with endpoint.
 
+### Postman
+
+[Postman](https://www.postman.com/) import JSON can be found here: https://www.postman.com/collections/b2cab534466822feadeb
+
 ### Debugging
 
 Run `./node_modules/@nestjs/cli/bin/nest.js start --watch` targeting `src/main.ts` file in whatever IDE/dev environment you use.

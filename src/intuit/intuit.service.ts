@@ -14,10 +14,11 @@ import { Logger } from 'winston';
 import { Settings } from 'src/settings/settings.entity';
 import { Client, ClientRedis } from '@nestjs/microservices';
 import configuration from 'src/config/configuration';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable()
 export class IntuitService implements OnModuleInit {
-  private oauthClient: any;
+  private oauthClient: OAuthClient;
 
   @Client(configuration().db.redis.options)
   private clientRedis: ClientRedis;
@@ -26,6 +27,7 @@ export class IntuitService implements OnModuleInit {
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
     @Inject('winston') private readonly logger: Logger,
+    private readonly mailService: MailService,
     private readonly settingsService: SettingsService
   ) {
     // Instance of client
@@ -47,6 +49,18 @@ export class IntuitService implements OnModuleInit {
   async onModuleInit() {
     // Connect your client to the redis server on startup.
     await this.clientRedis.connect();
+  }
+
+  /**
+   * Return the full, manual Intuit authorize URL.
+   * // TODO: Add randomized token for verification.
+   */
+  get authorizeUrl(): string {
+    return (
+      this.configService.get<string>('routes.root') +
+      this.configService.get<string>('routes.prefix') +
+      this.configService.get<string>('routes.intuit.authorize')
+    );
   }
 
   /**
@@ -88,9 +102,7 @@ export class IntuitService implements OnModuleInit {
     }
     if (!settings) {
       // Cannot proceed, throw error
-      this.logger.error(
-        `Cannot obtain valid Intuit authorization; manual authorization required.`
-      );
+      return this.handleInvalidAuthorization();
     } else {
       const accessTokenExpired =
         new Date(settings.services.intuit.accessTokenExpiration) < new Date();
@@ -106,16 +118,14 @@ export class IntuitService implements OnModuleInit {
           new Date();
         if (!refreshTokenExpired) {
           // Refresh token still valid, refresh it and get updated settings.
-          settings = await this.refresh();
+          settings = await this.refresh(settings.services.intuit.refreshToken);
           // Update settings
           return {
             Authorization: `Bearer ${settings.services.intuit.accessToken}`
           };
         } else {
           // Invalid refresh token requires user consent.
-          this.logger.error(
-            `Cannot obtain valid Intuit authorization; manual authorization required.`
-          );
+          return this.handleInvalidAuthorization();
         }
       }
     }
@@ -131,16 +141,36 @@ export class IntuitService implements OnModuleInit {
   }
 
   /**
+   * Processes invalid authorization.
+   *
+   * Log error.
+   * Create job to send out admin alert email.
+   */
+  handleInvalidAuthorization() {
+    this.logger.error(
+      `Cannot obtain valid Intuit authorization; manual authorization required.`
+    );
+
+    // Send email
+    return this.mailService.sendAdminAlert({
+      subject: 'WCASG Connector Intuit API Authorization',
+      html: `<h2>ALERT</h2><p>WCASG Connector requires a manual refresh of the Intuit API authorization.</p><p><a href="${this.authorizeUrl}">Click here to manually authorize.</a></p>`
+    });
+  }
+
+  /**
    * Create new Customer record.
    *
-   * @param req
+   * @param request
    */
-  async createCustomer(@Req() req: Request): Promise<AxiosResponse<string>> {
+  async createCustomer(
+    @Req() request: Request
+  ): Promise<AxiosResponse<string>> {
     const url = this.buildUrl(`customer`);
 
     try {
       const axiosResponse = await this.httpService
-        .post(url, req, { headers: await this.getAuthorizationHeaders() })
+        .post(url, request, { headers: await this.getAuthorizationHeaders() })
         .toPromise();
       return axiosResponse.data;
     } catch (err) {
@@ -183,10 +213,10 @@ export class IntuitService implements OnModuleInit {
    *
    * @see https://developer.intuit.com/app/developer/qbo/docs/develop/authentication-and-authorization/oauth-2.0
    *
-   * @param req
+   * @param request
    */
-  async callback(@Req() req: Request): Promise<string> {
-    const response = await this.oauthClient.createToken(req.url);
+  async callback(@Req() request: Request): Promise<string> {
+    const response = await this.oauthClient.createToken(request.url);
 
     const result = response.getJson();
 
@@ -215,8 +245,13 @@ export class IntuitService implements OnModuleInit {
     }
   }
 
-  async refresh(): Promise<Settings> {
-    const response = await this.oauthClient.refresh();
+  async refresh(refreshToken?: string): Promise<Settings> {
+    let response;
+    if (refreshToken) {
+      response = await this.oauthClient.refreshUsingToken(refreshToken);
+    } else {
+      response = await this.oauthClient.refresh();
+    }
     if (response && response.token) {
       // Update settings from response.
       return await this.settingsService.update({

@@ -20,50 +20,41 @@ export class StripeWebhookProcessor {
     protected readonly customerAdapter: StripeCustomerToIntuitCustomer
   ) {}
 
-  log(job: Job) {
-    this.logger.log({
-      event_id: job.data.id,
-      level: 'queue',
-      message: job.data,
-      processor: this.constructor.name,
-      timestamp: new Date().getTime()
-    });
-  }
-
   @OnQueueActive()
   onActive(job: Job) {
     this.logger.debug({
+      event: 'active',
+      event_id: job.data.id,
       job_id: job.id,
-      timestamp: new Date().getTime(),
+      level: 'queue',
       name: job.name,
-      event: 'active'
+      processor: this.constructor.name,
+      timestamp: new Date().getTime()
     });
   }
 
   @OnQueueStalled()
   onStalled(job: Job) {
     this.logger.debug({
+      event: 'stalled',
+      event_id: job.data.id,
       job_id: job.id,
-      timestamp: new Date().getTime(),
+      level: 'queue',
       name: job.name,
-      event: 'stalled'
+      processor: this.constructor.name,
+      timestamp: new Date().getTime()
     });
   }
 
   @Process(StripeWebhookEventsEnum['customer.created'])
   async customerCreated(job: Job) {
-    this.log(job);
     const intuitCustomer = this.customerAdapter.from(job.data.data.object);
-    return await this.intuitService.createCustomer(intuitCustomer);
+    return this.intuitService.createCustomer(intuitCustomer);
   }
 
-  @Process(StripeWebhookEventsEnum['payment_intent.created'])
-  paymentIntentCreated(job: Job) {
-    this.log(job);
-  }
-
-  @Process(StripeWebhookEventsEnum['payment_intent.succeeded'])
-  paymentIntentSucceeded(job: Job) {
-    this.log(job);
-  }
+  // @Process(StripeWebhookEventsEnum['payment_intent.created'])
+  // paymentIntentCreated(job: Job) {}
+  //
+  // @Process(StripeWebhookEventsEnum['payment_intent.succeeded'])
+  // paymentIntentSucceeded(job: Job) {}
 }

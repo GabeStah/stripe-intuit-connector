@@ -12,14 +12,14 @@ export class IntuitController {
   ) {}
 
   @Get('authorize')
-  authorize(@Req() req: Request, @Res() res: Response): void {
-    res.redirect(this.service.authUri());
+  authorize(@Req() request: Request, @Res() response: Response): void {
+    response.redirect(this.service.authUri());
   }
 
   @Get('createCustomer')
-  async createCustomer(@Req() req: Request): Promise<string> {
+  async createCustomer(@Req() request: Request): Promise<string> {
     try {
-      const response = await this.service.createCustomer(req);
+      const response = await this.service.createCustomer(request);
       return response.data;
     } catch (err) {
       this.logger.error(err);
@@ -39,11 +39,11 @@ export class IntuitController {
   /**
    * Callback URI invoked by Intuit API OAuth2 user consent form.
    *
-   * @param req
+   * @param request
    */
   @Get('callback')
-  async callback(@Req() req: Request): Promise<string> {
-    return this.service.callback(req);
+  async callback(@Req() request: Request): Promise<string> {
+    return this.service.callback(request);
   }
 
   @Get('redis')

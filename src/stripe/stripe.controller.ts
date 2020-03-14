@@ -1,8 +1,8 @@
 import { InjectQueue } from '@nestjs/bull';
-import { Controller, Inject, Post, Req } from '@nestjs/common';
+import { Controller, Inject, Post, Req, Res } from '@nestjs/common';
 import { Queue } from 'bull';
 import { IsStripeEvent } from '../queue/stripe/stripe-webhook.constants';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from 'winston';
@@ -19,7 +19,7 @@ export class StripeController {
   ) {}
 
   @Post('webhook')
-  async webhook(@Req() request: Request) {
+  async webhook(@Req() request: Request, @Res() response: Response) {
     try {
       const stripe = new Stripe(
         this.configService.get<string>('services.stripe.secret'),
@@ -35,10 +35,12 @@ export class StripeController {
       );
 
       if (IsStripeEvent(event.type)) {
-        await this.queue.add(event.type, event, {
+        const job = await this.queue.add(event.type, event, {
           jobId: uniqid(),
           attempts: 5
         });
+
+        return response.json({ message: `Job (${job.id}) queued.` });
       }
     } catch (err) {
       this.logger.error(err);

@@ -4,7 +4,7 @@ import { StripeController } from 'src/stripe/stripe.controller';
 import configuration from 'src/config/configuration';
 import { IntuitModule } from 'src/intuit/intuit.module';
 import { StripeCustomerToIntuitCustomer } from 'src/adapters/intuit-stripe/stripe-customer-to-intuit-customer';
-import { StripeWebhookProcessor } from 'src/queue/stripe/stripe-webhook.processor';
+import { StripeWebhookQueueService } from 'src/queue/stripe/stripe-webhook-queue.service';
 
 @Module({
   imports: [
@@ -19,7 +19,7 @@ import { StripeWebhookProcessor } from 'src/queue/stripe/stripe-webhook.processo
     IntuitModule
   ],
   controllers: [StripeController],
-  providers: [StripeWebhookProcessor, StripeCustomerToIntuitCustomer],
+  providers: [StripeWebhookQueueService, StripeCustomerToIntuitCustomer],
   exports: [IntuitModule]
 })
-export class StripeWebhookModule {}
+export class StripeWebhookQueueModule {}

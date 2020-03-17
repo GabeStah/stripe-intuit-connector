@@ -1,7 +1,7 @@
 import { InjectQueue } from '@nestjs/bull';
 import { Controller, Inject, Post, Req, Res } from '@nestjs/common';
 import { Queue } from 'bull';
-import { IsStripeEvent } from '../queue/stripe/stripe-webhook.constants';
+import { IsStripeEvent } from '../queue/stripe/stripe-webhook-queue.constants';
 import { Request, Response } from 'express';
 import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';

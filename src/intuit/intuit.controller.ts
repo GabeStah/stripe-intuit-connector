@@ -3,17 +3,19 @@ import { Request, Response } from 'express';
 import { IntuitService } from 'src/intuit/intuit.service';
 import { Logger } from 'winston';
 import { MessagePattern } from '@nestjs/microservices';
+import { IntuitAuthorizationService } from 'src/intuit/intuit-authorization.service';
 
 @Controller('intuit')
 export class IntuitController {
   constructor(
     private readonly service: IntuitService,
+    private readonly authService: IntuitAuthorizationService,
     @Inject('winston') private readonly logger: Logger
   ) {}
 
   @Get('authorize')
   authorize(@Req() request: Request, @Res() response: Response): void {
-    response.redirect(this.service.authUri());
+    response.redirect(this.authService.authUri());
   }
 
   @Get('createCustomer')
@@ -43,7 +45,7 @@ export class IntuitController {
    */
   @Get('callback')
   async callback(@Req() request: Request): Promise<string> {
-    return this.service.callback(request);
+    return this.authService.callback(request);
   }
 
   @Get('redis')

@@ -5,13 +5,14 @@ import { ConfigModule } from '@nestjs/config';
 import { SetBodyParser } from 'src/middleware/set-body-parser.middleware';
 import configuration from 'src/config/configuration';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { SettingsModule } from 'src/settings/settings.module';
 import { UsersModule } from 'src/users/users.module';
 import { WinstonModule } from 'nest-winston';
 import winston from 'winston';
 import WinstonDailyRotateFile from 'winston-daily-rotate-file';
-import { StripeWebhookModule } from 'src/queue/stripe/stripe-webhook.module';
+import { StripeWebhookQueueModule } from 'src/queue/stripe/stripe-webhook-queue.module';
 import { MailModule } from 'src/mail/mail.module';
+import { RedisModule } from 'src/redis/redis.module';
+import { IntuitQueueModule } from 'src/queue/intuit/intuit-queue.module';
 
 const winstonModule = WinstonModule.forRoot({
   level: 'info',
@@ -74,9 +75,10 @@ const typeOrmModule = TypeOrmModule.forRoot({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
     MailModule,
-    SettingsModule,
-    StripeWebhookModule,
+    IntuitQueueModule,
+    StripeWebhookQueueModule,
     UsersModule,
+    RedisModule,
     typeOrmModule,
     winstonModule
   ],

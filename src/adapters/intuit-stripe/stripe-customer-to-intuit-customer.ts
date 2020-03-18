@@ -21,6 +21,9 @@ export class StripeCustomerToIntuitCustomer extends Adapter {
    */
   from(source: any): any {
     this.source = source;
+
+    // Find existing by Stripe ID
+
     return {
       // REQUIRED_FOR_UPDATE
       // Id: '2',

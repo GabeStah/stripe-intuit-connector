@@ -60,7 +60,7 @@ export class IntuitAuthorizationService implements OnModuleInit {
     await this.updateTokensFromDb();
 
     // Refresh auth tokens from Intuit
-    await this.refresh();
+    await this.refresh({});
   }
 
   /**
@@ -158,16 +158,22 @@ export class IntuitAuthorizationService implements OnModuleInit {
    * Log error.
    * Create job to send out admin alert email.
    */
-  handleInvalidAuthorization() {
+  handleInvalidAuthorization({
+    shouldSendAlerts = true
+  }: {
+    shouldSendAlerts?: boolean;
+  }) {
     this.logger.error(
       `Cannot obtain valid Intuit authorization; manual authorization required.`
     );
 
-    // Send email
-    return this.mailService.sendAdminAlert({
-      subject: 'WCASG Connector Intuit API Authorization',
-      html: `<h2>ALERT</h2><p>WCASG Connector requires a manual refresh of the Intuit API authorization.</p><p><a href="${this.authorizeUrl}">Click here to manually authorize.</a></p>`
-    });
+    if (shouldSendAlerts) {
+      // Send email
+      return this.mailService.sendAdminAlert({
+        subject: 'WCASG Connector Intuit API Authorization',
+        html: `<h2>ALERT</h2><p>WCASG Connector requires a manual refresh of the Intuit API authorization.</p><p><a href="${this.authorizeUrl}">Click here to manually authorize.</a></p>`
+      });
+    }
   }
 
   /**
@@ -236,10 +242,16 @@ export class IntuitAuthorizationService implements OnModuleInit {
    * Attempt to refresh OAuth2 access_token.
    * Updates local settings if response contains valid access_token.
    */
-  async refresh(): Promise<IntuitAuthorizationTokens | null> {
+  async refresh({
+    shouldSendAlerts = true
+  }: {
+    shouldSendAlerts?: boolean;
+  }): Promise<IntuitAuthorizationTokens | null> {
     if (!this.areTokensValid()) {
       // Fail out and report to admin.
-      await this.handleInvalidAuthorization();
+      await this.handleInvalidAuthorization({
+        shouldSendAlerts: shouldSendAlerts
+      });
       return null;
     }
     let response;

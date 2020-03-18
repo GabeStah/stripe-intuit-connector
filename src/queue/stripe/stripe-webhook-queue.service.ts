@@ -4,7 +4,7 @@ import { Job } from 'bull';
 import configuration from 'src/config/configuration';
 import { IntuitService } from 'src/intuit/intuit.service';
 import { StripeCustomerToIntuitCustomer } from 'src/adapters/intuit-stripe/stripe-customer-to-intuit-customer';
-import { StripeWebhookEventsEnum } from 'src/queue/stripe/stripe-webhook-queue.constants';
+import { StripeWebhookEventTypes } from 'src/queue/stripe/stripe-webhook-queue.constants';
 import { BaseQueueService } from 'src/queue/base-queue.service';
 
 @Processor(configuration().queue.stripe.name)
@@ -17,18 +17,42 @@ export class StripeWebhookQueueService extends BaseQueueService {
     super(logger);
   }
 
-  @Process(StripeWebhookEventsEnum['customer.created'])
+  @Process(StripeWebhookEventTypes.customer.created)
   async customerCreated(job: Job) {
-    const intuitCustomer = this.customerAdapter.from(job.data.data.object);
+    const data = job.data.data.object;
+    const intuitCustomer = this.customerAdapter.from(data);
     return this.intuitService.createCustomer(intuitCustomer);
   }
 
-  @Process(StripeWebhookEventsEnum['payment_intent.created'])
+  @Process(StripeWebhookEventTypes.customer.updated)
+  async customerUpdated(job: Job) {
+    const data = job.data.data.object;
+    // Check if customer exists
+    const existingCustomer = await this.intuitService.findCustomer(data.id);
+    const updatedCustomer = this.customerAdapter.from(data);
+    const mergedCustomer = Object.assign(existingCustomer, updatedCustomer);
+    return this.intuitService.updateCustomer(mergedCustomer);
+  }
+
+  @Process(StripeWebhookEventTypes.customer.deleted)
+  async customerDeleted(job: Job) {
+    const data = job.data.data.object;
+    // Check if customer exists
+    // const existingCustomer = await this.intuitService.findCustomer(data.id);
+    // const intuitCustomer = this.customerAdapter.from(data);
+    // return this.intuitService.deleteCustomer(intuitCustomer);
+    const existingCustomer = await this.intuitService.findCustomer(data.id);
+    if (existingCustomer) {
+      // existingCustomer.Active = false;
+    }
+  }
+
+  @Process(StripeWebhookEventTypes.payment_intent.created)
   async paymentIntentCreated(job: Job) {
     return {};
   }
 
-  @Process(StripeWebhookEventsEnum['payment_intent.succeeded'])
+  @Process(StripeWebhookEventTypes.payment_intent.succeeded)
   async paymentIntentSucceeded(job: Job) {
     return {};
   }

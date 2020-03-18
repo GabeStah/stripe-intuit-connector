@@ -22,22 +22,13 @@ export class IntuitQueueService extends BaseQueueService
   }
 
   async onModuleInit(): Promise<any> {
-    // Remove existing scheduled job
-    await this.queue.removeRepeatable(
-      configuration().queue.intuit.types['refresh-auth'],
-      {
-        cron: this.configService.get<string>(
-          'services.intuit.auth.autoRefreshCronSchedule'
-        )
-      }
-    );
     // Schedule auto refresh job.
+    // Won't add new job if one with same name exists.
     const job = await this.queue.add(
       configuration().queue.intuit.types['refresh-auth'],
       {},
       {
         attempts: 5,
-        jobId: uniqid(),
         repeat: {
           cron: this.configService.get<string>(
             'services.intuit.auth.autoRefreshCronSchedule'
@@ -49,6 +40,6 @@ export class IntuitQueueService extends BaseQueueService
 
   @Process(configuration().queue.intuit.types['refresh-auth'])
   async refreshAuth(job: Job) {
-    await this.intuitAuthService.refresh();
+    await this.intuitAuthService.refresh({ shouldSendAlerts: false });
   }
 }

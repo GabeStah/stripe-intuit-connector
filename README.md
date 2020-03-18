@@ -53,6 +53,11 @@ If Docker installed run Redis in Docker container:
 
 Run `./node_modules/@nestjs/cli/bin/nest.js start --watch` targeting `src/main.ts` file in whatever IDE/dev environment you use.
 
+### Queue / Job Monitoring
+
+1. Launch both Redis and Connector.
+2. Visit [http://localhost:4321/v1/admin/queue](http://localhost:4321/v1/admin/queue).
+
 ## Testing
 
 ```bash

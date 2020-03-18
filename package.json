@@ -32,6 +32,7 @@
     "@nestjs/typeorm": "^6.3.3",
     "axios": "^0.19.2",
     "bull": "^3.13.0",
+    "bull-board": "^0.7.0",
     "flat": "^5.0.0",
     "intuit-oauth": "^2.0.2",
     "ioredis": "^4.16.0",

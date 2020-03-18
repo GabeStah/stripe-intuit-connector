@@ -29,9 +29,7 @@ export class IntuitService {
    * @param extra
    */
   buildUrl(extra: string): string {
-    return `${this.getBaseUrl()}/${extra}?minorversion=${this.configService.get<
-      string
-    >('services.intuit.api.version')}`;
+    return `${this.getBaseUrl()}/${extra}`;
   }
 
   /**
@@ -40,6 +38,141 @@ export class IntuitService {
    * @param request
    */
   async createCustomer(
+    @Req() request: Request
+  ): Promise<AxiosResponse<string>> {
+    const url = this.buildUrl(`customer`);
+
+    try {
+      const axiosResponse = await this.httpService
+        .post(url, request, {
+          headers: await this.intuitAuthService.getAuthorizationHeaders()
+        })
+        .toPromise();
+      return axiosResponse.data;
+    } catch (err) {
+      if (err.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        this.logger.error(err.response.data);
+        return err;
+        // return err.response;
+      } else if (err.request) {
+        // The request was made but no response was received
+        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+        // http.ClientRequest in node.js
+        this.logger.error(err.request);
+        return err.request;
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        this.logger.error(err.message);
+        return err.message;
+      }
+    }
+  }
+
+  /**
+   * Delete Customer record.
+   *
+   * @param request
+   */
+  async deleteCustomer(
+    @Req() request: Request
+  ): Promise<AxiosResponse<string>> {
+    const url = this.buildUrl(`customer`);
+
+    try {
+      const axiosResponse = await this.httpService
+        .post(url, request, {
+          headers: await this.intuitAuthService.getAuthorizationHeaders()
+        })
+        .toPromise();
+      return axiosResponse.data;
+    } catch (err) {
+      if (err.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        this.logger.error(err.response.data);
+        return err;
+        // return err.response;
+      } else if (err.request) {
+        // The request was made but no response was received
+        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+        // http.ClientRequest in node.js
+        this.logger.error(err.request);
+        return err.request;
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        this.logger.error(err.message);
+        return err.message;
+      }
+    }
+  }
+
+  /**
+   * Find existing Customer record.
+   *
+   * @param id
+   */
+  async findCustomer(id: number | string): Promise<AxiosResponse<object>> {
+    let url;
+    if (typeof id === 'number') {
+      url = this.buildUrl(`customer/${id}`);
+    } else if (typeof id === 'string') {
+      url = this.buildUrl(
+        `query?query@@SELECT * FROM Customer WHERE DisplayName LIKE '%${id}%'`
+      );
+    }
+
+    url = url
+      .replace(/%/g, '%25')
+      .replace(/'/g, '%27')
+      .replace(/=/g, '%3D')
+      .replace(/</g, '%3C')
+      .replace(/>/g, '%3E')
+      .replace(/&/g, '%26')
+      .replace(/#/g, '%23')
+      .replace(/\\/g, '%5C')
+      .replace(/\+/g, '%2B');
+    url = url.replace('@@', '=');
+
+    try {
+      const headers = {
+        ...(await this.intuitAuthService.getAuthorizationHeaders()),
+        'Content-Type': 'text/plain'
+      };
+      const axiosResponse = await this.httpService
+        .get(url, {
+          headers: headers
+        })
+        .toPromise();
+      return axiosResponse.data.QueryResponse.Customer[0];
+    } catch (err) {
+      if (err.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        this.logger.error(err.response.data);
+        return err;
+        // return err.response;
+      } else if (err.request) {
+        // The request was made but no response was received
+        // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+        // http.ClientRequest in node.js
+        this.logger.error(err.request);
+        return err.request;
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        this.logger.error(err.message);
+        return err.message;
+      }
+    }
+  }
+
+  /**
+   * Update existing Customer record.
+   *
+   * @param request
+   */
+  async updateCustomer(
     @Req() request: Request
   ): Promise<AxiosResponse<string>> {
     const url = this.buildUrl(`customer`);

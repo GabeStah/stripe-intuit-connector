@@ -13,6 +13,7 @@ import { StripeWebhookQueueModule } from 'src/queue/stripe/stripe-webhook-queue.
 import { MailModule } from 'src/mail/mail.module';
 import { RedisModule } from 'src/redis/redis.module';
 import { IntuitQueueModule } from 'src/queue/intuit/intuit-queue.module';
+import { BullBoardMiddleware } from 'src/middleware/bull-board.middleware';
 
 const winstonModule = WinstonModule.forRoot({
   level: 'info',
@@ -87,6 +88,7 @@ const typeOrmModule = TypeOrmModule.forRoot({
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
+    consumer.apply(BullBoardMiddleware).forRoutes('admin/queue');
     consumer.apply(SetBodyParser).forRoutes('*');
   }
 }

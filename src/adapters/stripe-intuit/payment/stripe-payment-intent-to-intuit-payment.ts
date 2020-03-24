@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { Adapter, ConversionType } from 'src/adapters/adapter.service';
+import { ConversionType } from 'src/adapters/adapter.service';
+import { StripeIntuitAdapterService } from 'src/adapters/stripe-intuit/stripe-intuit-adapter.service';
 
 /**
  * Stripe - PaymentIntent
@@ -11,7 +12,7 @@ import { Adapter, ConversionType } from 'src/adapters/adapter.service';
  *
  */
 @Injectable()
-export class StripePaymentIntentToIntuitPayment extends Adapter {
+export class StripePaymentIntentToIntuitPayment extends StripeIntuitAdapterService {
   from(source: any): any {
     this.source = source;
     return {

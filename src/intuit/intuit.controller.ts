@@ -18,26 +18,6 @@ export class IntuitController {
     response.redirect(this.authService.authUri());
   }
 
-  @Get('createCustomer')
-  async createCustomer(@Req() request: Request): Promise<string> {
-    try {
-      const response = await this.service.createCustomer(request);
-      return response.data;
-    } catch (err) {
-      this.logger.error(err);
-    }
-  }
-
-  @Get('getCompanyInfo')
-  async getCompanyInfo(): Promise<string> {
-    try {
-      const response = await this.service.getCompanyInfo();
-      return response.data;
-    } catch (err) {
-      this.logger.error(err);
-    }
-  }
-
   /**
    * Callback URI invoked by Intuit API OAuth2 user consent form.
    *

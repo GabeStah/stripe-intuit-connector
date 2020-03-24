@@ -25,8 +25,8 @@ export abstract class Adapter implements AdapterInterface {
   protected target: any;
 
   constructor(
-    private readonly configService: ConfigService,
-    @Inject('winston') private readonly logger: Logger
+    protected readonly config: ConfigService,
+    @Inject('winston') protected readonly logger: Logger
   ) {}
 
   abstract from(source: any): any;

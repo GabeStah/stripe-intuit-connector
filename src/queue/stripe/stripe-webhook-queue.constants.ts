@@ -1,15 +1,20 @@
-// Stripe event types we can listen for.
 import flat from 'flat';
 
+// Stripe event types we can listen for.
 export const StripeWebhookEventTypes = {
   customer: {
     created: 'customer.created',
-    updated: 'customer.updated',
-    deleted: 'customer.deleted'
+    deleted: 'customer.deleted',
+    updated: 'customer.updated'
   },
   payment_intent: {
     created: 'payment_intent.created',
     succeeded: 'payment_intent.succeeded'
+  },
+  product: {
+    created: 'product.created',
+    deleted: 'product.deleted',
+    updated: 'product.updated'
   }
 };
 

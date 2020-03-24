@@ -36,5 +36,5 @@ lerna-debug.log*
 # Env
 *.env
 
-# Docs
-/docs/
+# Notes
+/_notes/

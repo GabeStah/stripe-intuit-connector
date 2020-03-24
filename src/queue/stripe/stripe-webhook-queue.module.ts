@@ -3,8 +3,9 @@ import { Module } from '@nestjs/common';
 import { StripeController } from 'src/stripe/stripe.controller';
 import configuration from 'src/config/configuration';
 import { IntuitModule } from 'src/intuit/intuit.module';
-import { StripeCustomerToIntuitCustomer } from 'src/adapters/intuit-stripe/stripe-customer-to-intuit-customer';
 import { StripeWebhookQueueService } from 'src/queue/stripe/stripe-webhook-queue.service';
+import { StripeIntuitAdapterModule } from 'src/adapters/stripe-intuit/stripe-intuit-adapter.module';
+import { StripeIntuitAdapterService } from 'src/adapters/stripe-intuit/stripe-intuit-adapter.service';
 
 @Module({
   imports: [
@@ -16,10 +17,11 @@ import { StripeWebhookQueueService } from 'src/queue/stripe/stripe-webhook-queue
         name: configuration().queue.stripe.db.name
       }
     }),
-    IntuitModule
+    IntuitModule,
+    StripeIntuitAdapterModule
   ],
   controllers: [StripeController],
-  providers: [StripeWebhookQueueService, StripeCustomerToIntuitCustomer],
+  providers: [StripeIntuitAdapterService, StripeWebhookQueueService],
   exports: [IntuitModule]
 })
 export class StripeWebhookQueueModule {}

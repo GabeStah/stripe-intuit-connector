@@ -3,7 +3,6 @@ import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Job, Queue } from 'bull';
 import configuration from 'src/config/configuration';
 import { BaseQueueService } from 'src/queue/base-queue.service';
-import uniqid from 'uniqid';
 import { ConfigService } from '@nestjs/config';
 import { IntuitAuthorizationService } from 'src/intuit/intuit-authorization.service';
 

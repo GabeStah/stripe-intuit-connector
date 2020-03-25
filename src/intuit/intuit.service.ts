@@ -43,18 +43,20 @@ interface ActionParams {
 }
 
 interface ReadParams {
+  column?: string;
   id: number | string;
   type: IntuitEntityType;
 }
 
 interface QueryParams {
-  type: IntuitEntityType;
   id: number | string;
+  type: IntuitEntityType;
 }
 
 interface FindParams {
-  type: IntuitEntityType;
+  column?: string;
   id: string;
+  type: IntuitEntityType;
 }
 
 @Injectable()
@@ -118,34 +120,35 @@ export class IntuitService {
   }
 
   /**
-   * TODO: Add find search
+   * Finds an Intuit Entity instance by type and id.
    *
    * @param type
-   * @param id
+   * @param id - Typically Stripe Id as stored in search column.
+   * @param column? - Explicitly overrides lookup column.
    */
-  protected async find({ type, id }: FindParams) {
-    let searchColumn;
-    switch (type) {
-      case IntuitEntityType.Customer:
-        searchColumn = 'DisplayName';
-        break;
-      case IntuitEntityType.Invoice:
-        searchColumn = 'DocNumber';
-        break;
-      case IntuitEntityType.Item:
-        searchColumn = 'Sku';
-        break;
-      case IntuitEntityType.Payment:
-        searchColumn = 'PaymentRefNum';
-        break;
-      default:
-        return {};
+  protected async find({ type, id, column }: FindParams) {
+    if (!column) {
+      switch (type) {
+        case IntuitEntityType.Customer:
+          column = 'DisplayName';
+          break;
+        case IntuitEntityType.Invoice:
+          column = 'DocNumber';
+          break;
+        case IntuitEntityType.Item:
+          column = 'Sku';
+          break;
+        case IntuitEntityType.Payment:
+          column = 'PaymentRefNum';
+          break;
+        default:
+          return {};
+      }
     }
     const url = this.buildUrl(`query`, {
-      query: `SELECT * FROM ${type} WHERE ${searchColumn} LIKE '%${id}%'`
+      query: `SELECT * FROM ${type} WHERE ${column} LIKE '%${id}%'`
     });
     const result = await this.request({ method: HttpMethod.GET, url: url });
-    // Check fo
     if (
       result.hasOwnProperty('QueryResponse') &&
       result.QueryResponse.hasOwnProperty(type) &&
@@ -193,8 +196,9 @@ export class IntuitService {
    *
    * @param type
    * @param id
+   * @param column
    */
-  async read({ type, id }: ReadParams) {
+  async read({ type, id, column }: ReadParams) {
     if (typeof id === 'number') {
       const url = this.buildUrl(`${type.toLowerCase()}/${id}`);
       return this.request({ method: HttpMethod.GET, url: url });
@@ -205,7 +209,8 @@ export class IntuitService {
         // Use up to 20 characters of id.
         return this.find({
           type,
-          id: id.substring(underscoreIndex + 1, underscoreIndex + 1 + 20)
+          id: id.substring(underscoreIndex + 1, underscoreIndex + 1 + 20),
+          column
         });
       } else {
         // Assume non-Stripe id, but in string form.

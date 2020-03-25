@@ -7,13 +7,19 @@ export const StripeWebhookEventTypes = {
     deleted: 'customer.deleted',
     updated: 'customer.updated'
   },
-  payment_intent: {
-    created: 'payment_intent.created',
-    succeeded: 'payment_intent.succeeded'
+  invoice: {
+    created: 'invoice.created',
+    payment_succeeded: 'invoice.payment_succeeded'
+  },
+  plan: {
+    created: 'plan.created',
+    deleted: 'plan.deleted',
+    updated: 'plan.updated'
   },
   product: {
     created: 'product.created',
-    deleted: 'product.deleted',
+    // Intuit API doesn't support deletion for Item
+    // deleted: 'product.deleted',
     updated: 'product.updated'
   }
 };

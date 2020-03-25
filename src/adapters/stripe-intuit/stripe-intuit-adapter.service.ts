@@ -15,6 +15,7 @@ interface DeleteParams {
 }
 
 interface UpdateParams {
+  column?: string;
   data: any;
   id: string | number;
   type: IntuitEntityType;
@@ -56,9 +57,10 @@ export class StripeIntuitAdapterService extends Adapter {
     }
   }
 
-  async update({ type, data, id }: UpdateParams) {
+  async update({ type, data, id, column }: UpdateParams) {
     // Find existing
     const existing = await this.intuit.read({
+      column,
       type: type,
       id: id
     });

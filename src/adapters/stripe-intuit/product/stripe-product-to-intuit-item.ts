@@ -22,21 +22,10 @@ export class StripeProductToIntuitItem extends StripeIntuitAdapterService {
    */
   from(source: any): any {
     this.source = source;
-    const obj = {
-      Active: !!this.get('active'),
-      Description: this.get('description'),
-      IncomeAccountRef: {
-        name: this.config.get<string>(
-          'services.intuit.settings.account.default.name'
-        ),
-        value: this.config.get<number>(
-          'services.intuit.settings.account.default.id'
-        )
-      },
+    // Product is used as a Category and related to child Plan Items.
+    return {
       Name: `${this.get('name')} [${this.get('id')}]`,
-      Sku: this.get('id'),
-      Type: 'Service'
+      Type: 'Category'
     };
-    return obj;
   }
 }

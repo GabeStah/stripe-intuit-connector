@@ -80,7 +80,12 @@ export class IntuitService {
   buildUrl(uri: string, params?: any): string {
     return QueryString.stringifyUrl({
       url: `${this.getBaseUrl()}/${uri}`,
-      query: params
+      query: {
+        minorversion: this.configService.get<string>(
+          'services.intuit.api.version'
+        ),
+        ...params
+      }
     });
   }
 

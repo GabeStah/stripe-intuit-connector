@@ -9,6 +9,7 @@ import { MailService } from 'src/mail/mail.service';
 import { RedisService } from 'src/redis/redis.service';
 import { IntuitAuthorizationService } from 'src/intuit/intuit-authorization.service';
 import QueryString from 'query-string';
+import { toStripeId } from 'src/queue/stripe/stripe-webhook-queue.constants';
 
 enum HttpMethod {
   GET,
@@ -203,13 +204,12 @@ export class IntuitService {
       const url = this.buildUrl(`${type.toLowerCase()}/${id}`);
       return this.request({ method: HttpMethod.GET, url: url });
     } else if (typeof id === 'string') {
-      // Get Stripe Id
+      // Check for Stripe Id
       const underscoreIndex = id.indexOf('_');
       if (underscoreIndex !== -1) {
-        // Use up to 20 characters of id.
         return this.find({
           type,
-          id: id.substring(underscoreIndex + 1, underscoreIndex + 1 + 20),
+          id: toStripeId(id),
           column
         });
       } else {

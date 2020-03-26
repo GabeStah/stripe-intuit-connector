@@ -5,7 +5,7 @@ import configuration from 'src/config/configuration';
 import { IntuitEntityType } from 'src/intuit/intuit.service';
 import { StripeCustomerToIntuitCustomer } from 'src/adapters/stripe-intuit/customer/stripe-customer-to-intuit-customer';
 import {
-  IsStripeEvent,
+  isStripeEvent,
   StripeWebhookEventTypes
 } from 'src/queue/stripe/stripe-webhook-queue.constants';
 import { BaseQueueService } from 'src/queue/base-queue.service';
@@ -47,7 +47,7 @@ export class StripeWebhookQueueService extends BaseQueueService {
    */
   @Process()
   async process(job: Job) {
-    if (IsStripeEvent(job.data.type)) {
+    if (isStripeEvent(job.data.type)) {
       let product;
       let stripeObject;
       switch (job.data.type) {
@@ -59,7 +59,9 @@ export class StripeWebhookQueueService extends BaseQueueService {
           });
         case StripeWebhookEventTypes.customer.deleted:
           stripeObject = job.data.data.object;
-          return this.stripeIntuitAdapter.delete({
+          // Intuit doesn't support deletion, so instead set to inactive.
+          return this.stripeIntuitAdapter.update({
+            data: { Active: false },
             id: stripeObject.id,
             type: IntuitEntityType.Customer
           });

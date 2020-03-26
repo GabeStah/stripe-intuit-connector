@@ -24,8 +24,11 @@ export const StripeWebhookEventTypes = {
   }
 };
 
-export const IsStripeEvent = (event: string): boolean => {
+export const isStripeEvent = (event: string): boolean => {
   return Object.keys(
     flat.flatten<object, string[]>(StripeWebhookEventTypes)
   ).includes(event);
 };
+
+export const toStripeId = (id: string, maxLength = 20): string =>
+  id.substring(0, maxLength);

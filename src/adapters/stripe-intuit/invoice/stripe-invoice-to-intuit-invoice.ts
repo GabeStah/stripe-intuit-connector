@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { StripeIntuitAdapterService } from 'src/adapters/stripe-intuit/stripe-intuit-adapter.service';
 import { IntuitEntityType } from '../../../intuit/intuit.service';
+import { toStripeId } from 'src/queue/stripe/stripe-webhook-queue.constants';
 
 /**
  * Adapter to convert from Stripe Invoice to Intuit Invoice object.
@@ -42,7 +43,7 @@ export class StripeInvoiceToIntuitInvoice extends StripeIntuitAdapterService {
         }
         lines.push({
           DetailType: 'SalesItemLineDetail',
-          Description: line.nickname ?? '',
+          Description: line.description ?? line.plan?.nickname ?? '',
           Amount: (line.amount / 100).toFixed(2),
           SalesItemLineDetail: {
             ItemRef: {
@@ -54,8 +55,7 @@ export class StripeInvoiceToIntuitInvoice extends StripeIntuitAdapterService {
         });
       }
       const obj = {
-        // Maximum 20 characters
-        DocNumber: this.get('id').substring(0, 19),
+        DocNumber: toStripeId(this.get('id')),
         CustomerRef: {
           // Intuit Customer Id
           value: intuitCustomer.Id

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { StripeIntuitAdapterService } from 'src/adapters/stripe-intuit/stripe-intuit-adapter.service';
+import { toStripeId } from 'src/queue/stripe/stripe-webhook-queue.constants';
 
 /**
  * Adapter to convert between Stripe Customer and Intuit Customer objects.
@@ -25,7 +26,7 @@ export class StripeCustomerToIntuitCustomer extends StripeIntuitAdapterService {
       PrimaryEmailAddr: {
         Address: this.get('email')
       },
-      DisplayName: `${this.get('name')} [${this.get('id')}]`,
+      DisplayName: `${this.get('name')} [${toStripeId(this.get('id'))}]`,
       GivenName: this.get('name'),
       Notes: JSON.stringify({
         stripe: {

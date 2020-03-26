@@ -1,7 +1,7 @@
 import { InjectQueue } from '@nestjs/bull';
 import { Controller, Inject, Post, Req, Res } from '@nestjs/common';
 import { Queue } from 'bull';
-import { IsStripeEvent } from '../queue/stripe/stripe-webhook-queue.constants';
+import { isStripeEvent } from '../queue/stripe/stripe-webhook-queue.constants';
 import { Request, Response } from 'express';
 import Stripe from 'stripe';
 import { ConfigService } from '@nestjs/config';
@@ -36,7 +36,7 @@ export class StripeController {
         this.configService.get<string>('services.stripe.webhook.secret')
       );
 
-      if (IsStripeEvent(event.type)) {
+      if (isStripeEvent(event.type)) {
         const job = await this.queue.add(event, {
           jobId: uniqid(),
           attempts: 5

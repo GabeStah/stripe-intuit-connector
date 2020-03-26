@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { StripeIntuitAdapterService } from 'src/adapters/stripe-intuit/stripe-intuit-adapter.service';
 import { IntuitEntityType } from '../../../intuit/intuit.service';
+import { toStripeId } from 'src/queue/stripe/stripe-webhook-queue.constants';
 
 /**
  * Adapter to convert from Stripe Invoice to Intuit Payment object.
@@ -28,39 +29,41 @@ export class StripeInvoiceToIntuitPayment extends StripeIntuitAdapterService {
         type: IntuitEntityType.Customer,
         id: this.get('customer')
       });
-      const lineData = this.get('lines.data');
       const lines = [];
-      for (const line of lineData) {
-        const intuitItem = await this.intuit.read({
-          type: IntuitEntityType.Item,
-          id: line.plan?.id
-        });
-        if (!intuitItem) {
-          throw new Error(
-            `Could not create Intuit invoice (no matching Item found matching Stripe Plan).`
-          );
-        }
-        lines.push({
-          DetailType: 'SalesItemLineDetail',
-          Description: line.nickname ?? '',
-          Amount: (line.amount / 100).toFixed(2),
-          SalesItemLineDetail: {
-            ItemRef: {
-              value: intuitItem.Id
-            },
-            Qty: 1,
-            UnitPrice: (line.amount / 100).toFixed(2)
-          }
-        });
+      const intuitInvoice = await this.intuit.read({
+        type: IntuitEntityType.Invoice,
+        id: this.get('id')
+      });
+      if (!intuitInvoice) {
+        throw new Error(
+          `Could not create Intuit Payment (no matching Item found matching Stripe Plan).`
+        );
       }
+      lines.push({
+        Amount: (this.get('amount_paid') / 100).toFixed(2),
+        LinkedTxn: [
+          {
+            TxnId: intuitInvoice.Id,
+            TxnType: 'Invoice'
+          }
+        ]
+      });
       const obj = {
-        // Maximum 20 characters
-        DocNumber: this.get('id').substring(0, 19),
+        PaymentRefNum: toStripeId(this.get('payment_intent')),
         CustomerRef: {
           // Intuit Customer Id
           value: intuitCustomer.Id
         },
-        Line: lines
+        // Indicates the total amount of the transaction. This includes the total of all the charges, allowances, and taxes.
+        TotalAmt: (this.get('amount_paid') / 100).toFixed(2),
+        Line: lines,
+        PrivateNote: JSON.stringify({
+          invoice_id: this.get('id'),
+          charge: this.get('charge'),
+          created: this.get('created'),
+          customer_email: this.get('customer_email'),
+          customer_name: this.get('customer_name')
+        })
       };
       return obj;
     } catch (e) {

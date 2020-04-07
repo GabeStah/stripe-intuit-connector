@@ -4,8 +4,6 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { SetBodyParser } from 'src/middleware/set-body-parser.middleware';
 import configuration from 'src/config/configuration';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { UsersModule } from 'src/users/users.module';
 import { WinstonModule } from 'nest-winston';
 import winston from 'winston';
 import WinstonDailyRotateFile from 'winston-daily-rotate-file';
@@ -60,17 +58,17 @@ const winstonModule = WinstonModule.forRoot({
   ]
 });
 
-const typeOrmModule = TypeOrmModule.forRoot({
-  type: 'mongodb',
-  host: '127.0.0.1',
-  port: 4433,
-  database: 'connector',
-  // entities: [User],
-  // Loads all entities imported via TypeOrmModule.forFeature.
-  autoLoadEntities: true,
-  synchronize: true,
-  useUnifiedTopology: true
-});
+// const typeOrmModule = TypeOrmModule.forRoot({
+//   type: 'mongodb',
+//   host: '127.0.0.1',
+//   port: 4433,
+//   database: 'connector',
+//   // entities: [User],
+//   // Loads all entities imported via TypeOrmModule.forFeature.
+//   autoLoadEntities: true,
+//   synchronize: true,
+//   useUnifiedTopology: true
+// });
 
 @Module({
   imports: [
@@ -78,9 +76,8 @@ const typeOrmModule = TypeOrmModule.forRoot({
     MailModule,
     IntuitQueueModule,
     StripeWebhookQueueModule,
-    UsersModule,
     RedisModule,
-    typeOrmModule,
+    // typeOrmModule,
     winstonModule
   ],
   controllers: [AppController],

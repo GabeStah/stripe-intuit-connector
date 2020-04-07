@@ -1,7 +1,5 @@
-import { HttpService, Inject, Injectable, Req } from '@nestjs/common';
+import { HttpService, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Request } from 'express';
-import { AxiosResponse } from 'axios';
 import { Logger } from 'winston';
 import { Client, ClientRedis } from '@nestjs/microservices';
 import configuration from 'src/config/configuration';

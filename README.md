@@ -60,6 +60,35 @@ Run `./node_modules/@nestjs/cli/bin/nest.js start --watch` targeting `src/main.t
 1. Launch both Redis and Connector.
 2. Visit [http://localhost:4321/v1/admin/queue](http://localhost:4321/v1/admin/queue).
 
+## Deployment
+
+### Staging
+
+- Base URL: `http://wcasg-connector.pngpub.com:4321/`
+- Intuit Reauth URL: `http://wcasg-connector.pngpub.com:4321/v1/intuit/authorize`
+- Stripe Webhook Endpoint: `http://wcasg-connector.pngpub.com:4321/v1/stripe/webhook`
+
+---
+
+- App: AWS EC2
+  - Name: `wcasg-connector`
+  - Type: `t2.small`
+  - Public / Elastic IP: `100.21.12.193`
+- Redis: AWS 
+  - Name: `wcasg-connector-redis`
+  - Nodes: `1`
+  - NodeType: `cache.t2.small`
+  - Endpoint: `wcasg-connector-redis.btdm1a.0001.usw2.cache.amazonaws.com`
+  - Port: `6379`
+- VPC
+  - ID: `vpc-0b54e9694c2377fc2`
+  - Name: `vpc-wcasg`
+  - Security Groups
+    - `sec-wcasg-web` - Opens ports 80 and 443
+    - `sec-wcasg-ssh` - Opens port 22
+    - `sec-wcasg-connector-4321` - Opens port 4321 to outside traffic
+    - `sg-065c0296ab1569aa8` - Opens incoming port 6379 between Redis and EC2
+
 ## Testing
 
 ```bash

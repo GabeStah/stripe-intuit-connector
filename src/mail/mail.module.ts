@@ -2,16 +2,16 @@ import { Module } from '@nestjs/common';
 import { MailService } from 'src/mail/mail.service';
 import { MailController } from 'src/mail/mail.controller';
 import { BullModule } from '@nestjs/bull';
-import configuration from 'src/config/configuration';
+import config from 'src/config/config';
 
 @Module({
   imports: [
     BullModule.registerQueue({
-      name: configuration().queue.mail.name,
+      name: config.get('queue.mail.name'),
       redis: {
-        host: configuration().db.redis.host,
-        port: configuration().db.redis.port,
-        name: configuration().queue.mail.db.name
+        host: config.get('db.redis.host'),
+        port: config.get('db.redis.port'),
+        name: config.get('queue.mail.db.name')
       }
     })
   ],

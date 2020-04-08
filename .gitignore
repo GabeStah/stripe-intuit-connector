@@ -38,3 +38,6 @@ lerna-debug.log*
 
 # Notes
 /_notes/
+/config/development.json
+/config/production.json
+/docker/redis/redis.conf

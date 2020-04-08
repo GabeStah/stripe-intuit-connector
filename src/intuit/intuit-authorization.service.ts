@@ -10,7 +10,6 @@ import OAuthClient from 'intuit-oauth';
 import { Request } from 'express';
 import { Logger } from 'winston';
 import { Client, ClientRedis } from '@nestjs/microservices';
-import configuration from 'src/config/configuration';
 import { MailService } from 'src/mail/mail.service';
 import { RedisService } from 'src/redis/redis.service';
 import { Transport } from '@nestjs/common/enums/transport.enum';

@@ -6,10 +6,19 @@ import { IntuitAuthorizationService } from 'src/intuit/intuit-authorization.serv
 import { MailService } from 'src/mail/mail.service';
 import { RedisService } from 'src/redis/redis.service';
 import { Logger } from 'winston';
+import { Transport } from '@nestjs/common/enums/transport.enum';
+import config from 'src/config/config';
 
 @Injectable()
 export class StripeService {
-  @Client(configuration().db.redis.options)
+  @Client({
+    transport: Transport.REDIS,
+    options: {
+      url: `redis://${config.get('db.redis.host')}:${config.get(
+        'db.redis.port'
+      )}`
+    }
+  })
   private clientRedis: ClientRedis;
 
   constructor(

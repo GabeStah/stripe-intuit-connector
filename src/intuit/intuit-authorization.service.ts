@@ -13,6 +13,8 @@ import { Client, ClientRedis } from '@nestjs/microservices';
 import configuration from 'src/config/configuration';
 import { MailService } from 'src/mail/mail.service';
 import { RedisService } from 'src/redis/redis.service';
+import { Transport } from '@nestjs/common/enums/transport.enum';
+import config from 'src/config/config';
 
 export interface IntuitAuthorizationTokens {
   readonly accessToken: string;
@@ -26,7 +28,14 @@ export class IntuitAuthorizationService implements OnModuleInit {
   private oauthClient: OAuthClient;
   private authTokens?: IntuitAuthorizationTokens;
 
-  @Client(configuration().db.redis.options)
+  @Client({
+    transport: Transport.REDIS,
+    options: {
+      url: `redis://${config.get('db.redis.host')}:${config.get(
+        'db.redis.port'
+      )}`
+    }
+  })
   private clientRedis: ClientRedis;
 
   constructor(

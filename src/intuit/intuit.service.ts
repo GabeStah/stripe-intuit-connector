@@ -8,6 +8,8 @@ import { RedisService } from 'src/redis/redis.service';
 import { IntuitAuthorizationService } from 'src/intuit/intuit-authorization.service';
 import QueryString from 'query-string';
 import { toStripeId } from 'src/queue/stripe/stripe-webhook-queue.constants';
+import { Transport } from '@nestjs/common/enums/transport.enum';
+import config from 'src/config/config';
 
 enum HttpMethod {
   GET,
@@ -60,7 +62,14 @@ interface FindParams {
 
 @Injectable()
 export class IntuitService {
-  @Client(configuration().db.redis.options)
+  @Client({
+    transport: Transport.REDIS,
+    options: {
+      url: `redis://${config.get('db.redis.host')}:${config.get(
+        'db.redis.port'
+      )}`
+    }
+  })
   private clientRedis: ClientRedis;
 
   constructor(

@@ -54,6 +54,32 @@ export class StripeInvoiceToIntuitInvoice extends StripeIntuitAdapterService {
           }
         });
       }
+
+      // Check for discount
+      if (this.get('discount')) {
+        const coupon = this.get('discount.coupon');
+        // Ensure coupon is valid
+        if (coupon && coupon.valid) {
+          // Check if percent-based
+          if (coupon.percent_off) {
+            // Add description
+            lines.push({
+              DetailType: 'DescriptionOnly',
+              Description: `Coupon: ${coupon.name} [${coupon.id}]`
+            });
+
+            // Add applicable percentage discount
+            lines.push({
+              DetailType: 'DiscountLineDetail',
+              DiscountLineDetail: {
+                PercentBased: true,
+                DiscountPercent: coupon.percent_off
+              }
+            });
+          }
+        }
+      }
+
       const obj = {
         DocNumber: toStripeId(this.get('id')),
         CustomerRef: {

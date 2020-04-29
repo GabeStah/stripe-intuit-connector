@@ -34,10 +34,9 @@ lerna-debug.log*
 !.vscode/extensions.json
 
 # Env
-*.env
+*.env*
 
 # Notes
 /_notes/
-/config/development.json
-/config/production.json
 /docker/redis/redis.conf
+/cert/

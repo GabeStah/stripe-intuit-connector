@@ -1,7 +1,7 @@
 import { Process, Processor } from '@nestjs/bull';
 import { Inject, Logger } from '@nestjs/common';
 import { Job } from 'bull';
-import configuration from 'src/config/configuration';
+import config from 'src/config/config';
 import { IntuitEntityType } from 'src/intuit/intuit.service';
 import { StripeCustomerToIntuitCustomer } from 'src/adapters/stripe-intuit/customer/stripe-customer-to-intuit-customer';
 import {
@@ -13,11 +13,10 @@ import { StripeIntuitAdapterService } from 'src/adapters/stripe-intuit/stripe-in
 import { StripeProductToIntuitItem } from 'src/adapters/stripe-intuit/product/stripe-product-to-intuit-item';
 import { StripePlanToIntuitItem } from 'src/adapters/stripe-intuit/plan/stripe-plan-to-intuit-item';
 import Stripe from 'stripe';
-import { ConfigService } from '@nestjs/config';
 import { StripeInvoiceToIntuitInvoice } from 'src/adapters/stripe-intuit/invoice/stripe-invoice-to-intuit-invoice';
 import { StripeInvoiceToIntuitPayment } from 'src/adapters/stripe-intuit/payment/stripe-invoice-to-intuit-payment';
 
-@Processor(configuration().queue.stripe.name)
+@Processor(config.get('queue.stripe.name'))
 export class StripeWebhookQueueService extends BaseQueueService {
   private stripe: Stripe;
   constructor(
@@ -27,17 +26,13 @@ export class StripeWebhookQueueService extends BaseQueueService {
     protected readonly invoicePaymentAdapter: StripeInvoiceToIntuitPayment,
     protected readonly planAdapter: StripePlanToIntuitItem,
     protected readonly productAdapter: StripeProductToIntuitItem,
-    protected readonly stripeIntuitAdapter: StripeIntuitAdapterService,
-    private readonly configService: ConfigService
+    protected readonly stripeIntuitAdapter: StripeIntuitAdapterService
   ) {
     super(logger);
 
-    this.stripe = new Stripe(
-      this.configService.get<string>('services.stripe.secret'),
-      {
-        apiVersion: '2020-03-02'
-      }
-    );
+    this.stripe = new Stripe(config.get('services.stripe.secret'), {
+      apiVersion: '2020-03-02'
+    });
   }
 
   /**

@@ -1,6 +1,5 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import configuration from 'src/config/configuration';
 import config from 'src/config/config';
 import * as fs from 'fs';
 
@@ -13,22 +12,20 @@ async function bootstrap() {
     };
   }
 
-  console.log(config.get('env'));
-
   const app = await NestFactory.create(AppModule, {
     bodyParser: false,
     httpsOptions
   });
 
-  app.setGlobalPrefix(configuration().routes.prefix);
+  app.setGlobalPrefix(config.get('routes.prefix'));
 
   // Add Redis microservice
-  app.connectMicroservice(configuration().db.redis.options);
+  app.connectMicroservice(config.get('db.redis.options'));
 
   // Start microservices
   await app.startAllMicroservicesAsync();
 
   // Start app
-  await app.listen(configuration().port);
+  await app.listen(config.get('port'));
 }
 bootstrap();

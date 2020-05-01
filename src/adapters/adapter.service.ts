@@ -1,5 +1,4 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Logger } from 'winston';
 import get from 'lodash/get';
 import round from 'lodash/round';
@@ -24,10 +23,7 @@ export abstract class Adapter implements AdapterInterface {
   protected source: any;
   protected target: any;
 
-  constructor(
-    protected readonly config: ConfigService,
-    @Inject('winston') protected readonly logger: Logger
-  ) {}
+  constructor(@Inject('winston') protected readonly logger: Logger) {}
 
   abstract from(source: any): any;
 

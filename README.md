@@ -211,10 +211,10 @@ The following is the current implementation of Connector to handle Intuit API au
   Active: true,
   Description: this.get('description'),
   IncomeAccountRef: {
-    name: this.config.get<string>(
+    name: config.get(
       'services.intuit.settings.account.default.name'
     ),
-    value: this.config.get<number>(
+    value: config.get(
       'services.intuit.settings.account.default.id'
     )
   },

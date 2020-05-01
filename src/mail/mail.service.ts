@@ -2,7 +2,6 @@ import { Inject, Injectable } from '@nestjs/common';
 import nodemailer from 'nodemailer';
 import Mail from 'nodemailer/lib/mailer';
 import { Logger } from 'winston';
-import { ConfigService } from '@nestjs/config';
 import {
   InjectQueue,
   OnQueueActive,
@@ -10,19 +9,18 @@ import {
   Process,
   Processor
 } from '@nestjs/bull';
-import configuration from 'src/config/configuration';
+import config from 'src/config/config';
 import { Job, Queue } from 'bull';
 import uniqid from 'uniqid';
 
 @Injectable()
-@Processor(configuration().queue.mail.name)
+@Processor(config.get('queue.mail.name'))
 export class MailService {
   private readonly transporter: Mail;
 
   constructor(
-    private readonly configService: ConfigService,
     @Inject('winston') private readonly logger: Logger,
-    @InjectQueue(configuration().queue.mail.name) private readonly queue: Queue
+    @InjectQueue(config.get('queue.mail.name')) private readonly queue: Queue
   ) {
     if (!this.transporter) {
       this.transporter = this.getTransporter();
@@ -71,7 +69,7 @@ export class MailService {
    * @param job
    * @return Promise<any> - Success promise callback indicates job success, marking as completed in queue.
    */
-  @Process(configuration().queue.mail.types.send)
+  @Process(config.get('queue.mail.types.send'))
   private async handleSend(job: Job) {
     const options = this.mergeOptions(job.data);
 
@@ -103,7 +101,7 @@ export class MailService {
     }
 
     const job = await this.queue.add(
-      configuration().queue.mail.types.send,
+      config.get('queue.mail.types.send'),
       options,
       {
         jobId: uniqid(),
@@ -121,7 +119,7 @@ export class MailService {
    */
   async sendAdminAlert(options?: Mail.Options) {
     options = this.mergeOptions(
-      { to: this.configService.get<string>('mail.adminAlertAddress') },
+      { to: config.get('mail.adminAlertAddress') },
       options
     );
 
@@ -135,7 +133,7 @@ export class MailService {
     }
 
     const job = await this.queue.add(
-      configuration().queue.mail.types.send,
+      config.get('queue.mail.types.send'),
       options,
       {
         jobId: uniqid(),
@@ -154,9 +152,9 @@ export class MailService {
   private mergeOptions(...options: Mail.Options[]): Mail.Options {
     return Object.assign(
       {
-        from: `"${this.configService.get<string>(
-          'mail.from.name'
-        )}" <${this.configService.get<string>('mail.from.address')}>`,
+        from: `"${config.get('mail.from.name')}" <${config.get(
+          'mail.from.address'
+        )}>`,
         subject: 'Message from WCASG Connector',
         text: 'Hello world' // plain text body
         // html: '<b>Hello world</b>' // html body
@@ -172,12 +170,12 @@ export class MailService {
    */
   private getTransporter() {
     return nodemailer.createTransport({
-      host: this.configService.get<string>('mail.host'),
-      port: this.configService.get<number>('mail.port'),
+      host: config.get('mail.host'),
+      port: config.get('mail.port'),
       secure: false, // true for 465, false for other ports
       auth: {
-        user: this.configService.get<string>('mail.username'),
-        pass: this.configService.get<string>('mail.password')
+        user: config.get('mail.username'),
+        pass: config.get('mail.password')
       }
     });
   }

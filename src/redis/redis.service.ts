@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import Redis from 'ioredis';
 import IORedis from 'ioredis';
-import { ConfigService } from '@nestjs/config';
 import flat from 'flat';
+import config from 'src/config/config';
 
 @Injectable()
 export class RedisService {
   protected redis: IORedis.Redis;
-  constructor(private readonly configService: ConfigService) {
+  constructor() {
     this.redis = new Redis({
-      host: this.configService.get<string>('db.redis.host'),
-      port: this.configService.get<number>('db.redis.port')
+      host: config.get('db.redis.host'),
+      port: config.get('db.redis.port')
     });
   }
 

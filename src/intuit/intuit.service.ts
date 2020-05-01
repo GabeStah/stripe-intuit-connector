@@ -1,8 +1,6 @@
 import { HttpService, Inject, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { Logger } from 'winston';
 import { Client, ClientRedis } from '@nestjs/microservices';
-import configuration from 'src/config/configuration';
 import { MailService } from 'src/mail/mail.service';
 import { RedisService } from 'src/redis/redis.service';
 import { IntuitAuthorizationService } from 'src/intuit/intuit-authorization.service';
@@ -73,7 +71,6 @@ export class IntuitService {
   private clientRedis: ClientRedis;
 
   constructor(
-    private readonly configService: ConfigService,
     private readonly httpService: HttpService,
     private readonly intuitAuthService: IntuitAuthorizationService,
     private readonly mailService: MailService,
@@ -91,9 +88,7 @@ export class IntuitService {
     return QueryString.stringifyUrl({
       url: `${this.getBaseUrl()}/${uri}`,
       query: {
-        minorversion: this.configService.get<string>(
-          'services.intuit.api.version'
-        ),
+        minorversion: config.get('services.intuit.api.version'),
         ...params
       }
     });
@@ -316,9 +311,9 @@ export class IntuitService {
    * Get base Intuit API URL.
    */
   getBaseUrl(): string {
-    return `https://${this.configService.get<string>(
+    return `https://${config.get(
       'services.intuit.api.url'
-    )}/v3/company/${this.configService.get<string>('services.intuit.company')}`;
+    )}/v3/company/${config.get('services.intuit.company')}`;
   }
 
   async redis() {

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { StripeIntuitAdapterService } from 'src/adapters/stripe-intuit/stripe-intuit-adapter.service';
+import config from 'src/config/config';
 
 /**
  * Adapter to convert from Stripe Plan to Intuit Item object.
@@ -27,12 +28,8 @@ export class StripePlanToIntuitItem extends StripeIntuitAdapterService {
       Active: !!this.get('active'),
       Description: this.get('description'),
       IncomeAccountRef: {
-        name: this.config.get<string>(
-          'services.intuit.settings.account.default.name'
-        ),
-        value: this.config.get<number>(
-          'services.intuit.settings.account.default.id'
-        )
+        name: config.get('services.intuit.settings.account.default.name'),
+        value: config.get('services.intuit.settings.account.default.id')
       },
       Name: `${this.get('product.name')} [${this.get('product.id')}]:${this.get(
         'product.name'

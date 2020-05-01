@@ -1,9 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
 import { SetBodyParser } from 'src/middleware/set-body-parser.middleware';
-import configuration from 'src/config/configuration';
 import { WinstonModule } from 'nest-winston';
 import winston from 'winston';
 import WinstonDailyRotateFile from 'winston-daily-rotate-file';
@@ -72,7 +70,6 @@ const winstonModule = WinstonModule.forRoot({
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true, load: [configuration] }),
     MailModule,
     IntuitQueueModule,
     StripeWebhookQueueModule,

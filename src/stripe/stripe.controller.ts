@@ -4,10 +4,9 @@ import { Queue } from 'bull';
 import { isStripeEvent } from '../queue/stripe/stripe-webhook-queue.constants';
 import { Request, Response } from 'express';
 import Stripe from 'stripe';
-import { ConfigService } from '@nestjs/config';
 import { Logger } from 'winston';
-import configuration from 'src/config/configuration';
 import uniqid from 'uniqid';
+import config from 'src/config/config';
 
 @Controller('stripe')
 export class StripeController {
@@ -15,16 +14,12 @@ export class StripeController {
 
   constructor(
     @Inject('winston') private readonly logger: Logger,
-    @InjectQueue(configuration().queue.stripe.name)
-    private readonly queue: Queue,
-    private readonly configService: ConfigService
+    @InjectQueue(config.get('queue.stripe.name'))
+    private readonly queue: Queue
   ) {
-    this.stripe = new Stripe(
-      this.configService.get<string>('services.stripe.secret'),
-      {
-        apiVersion: '2020-03-02'
-      }
-    );
+    this.stripe = new Stripe(config.get('services.stripe.secret'), {
+      apiVersion: '2020-03-02'
+    });
   }
 
   @Post('webhook')
@@ -33,7 +28,7 @@ export class StripeController {
       const event = this.stripe.webhooks.constructEvent(
         request.body,
         request.headers['stripe-signature'],
-        this.configService.get<string>('services.stripe.webhook.secret')
+        config.get('services.stripe.webhook.secret')
       );
 
       if (isStripeEvent(event.type)) {

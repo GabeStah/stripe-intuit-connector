@@ -5,7 +5,6 @@ import {
   OnModuleInit,
   Req
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import OAuthClient from 'intuit-oauth';
 import { Request } from 'express';
 import { Logger } from 'winston';
@@ -38,7 +37,6 @@ export class IntuitAuthorizationService implements OnModuleInit {
   private clientRedis: ClientRedis;
 
   constructor(
-    private readonly configService: ConfigService,
     private readonly httpService: HttpService,
     private readonly mailService: MailService,
     private readonly redisService: RedisService,
@@ -51,17 +49,13 @@ export class IntuitAuthorizationService implements OnModuleInit {
 
     // Instance of client
     this.oauthClient = new OAuthClient({
-      clientId: this.configService.get<string>('services.intuit.auth.clientId'),
-      clientSecret: this.configService.get<string>(
-        'services.intuit.auth.clientSecret'
-      ),
-      environment: this.configService.get<string>(
-        'services.intuit.environment'
-      ),
+      clientId: config.get('services.intuit.auth.clientId'),
+      clientSecret: config.get('services.intuit.auth.clientSecret'),
+      environment: config.get('services.intuit.environment'),
       redirectUri:
-        this.configService.get<string>('routes.root') +
-        this.configService.get<string>('routes.prefix') +
-        this.configService.get<string>('routes.intuit.callback')
+        config.get('routes.root') +
+        config.get('routes.prefix') +
+        config.get('routes.intuit.callback')
     });
 
     // Update auth tokens from db
@@ -113,9 +107,9 @@ export class IntuitAuthorizationService implements OnModuleInit {
    */
   get authorizeUrl(): string {
     return (
-      this.configService.get<string>('routes.root') +
-      this.configService.get<string>('routes.prefix') +
-      this.configService.get<string>('routes.intuit.authorize')
+      config.get('routes.root') +
+      config.get('routes.prefix') +
+      config.get('routes.intuit.authorize')
     );
   }
 

@@ -1,10 +1,10 @@
 image: node:alpine
 
 stages:
-#  - setup
-#  - build
-#  - test
-#  - deploy
+  - setup
+  - build
+  - test
+  - deploy
   - healthcheck
 
 ### Variables

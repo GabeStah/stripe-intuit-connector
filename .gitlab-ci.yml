@@ -1,0 +1,88 @@
+image: node:alpine
+
+stages:
+  - setup
+  - build
+  - test
+  - deploy
+
+# Base variables
+# See: https://gitlab.com/gitlab-org/gitlab-runner/-/issues/1809
+variables:
+  # All
+  REPOSITORY_URL: $CI_REPOSITORY_URL
+  # Testing
+  APP_URL_TESTING: 'https://connector.widget.wcasg.solarix.dev'
+  DEPLOY_ENDPOINT_TESTING: 'connector.widget.wcasg.solarix.dev'
+
+testing:setup:
+  stage: setup
+  only:
+    - master
+  variables:
+    APP_URL: $APP_URL_TESTING
+    DEPLOY_ENDPOINT: $DEPLOY_ENDPOINT_TESTING
+    SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY_TESTING
+  environment:
+    name: testing
+    url: $APP_URL
+  before_script:
+    - chmod +x ./.deploy/${CI_ENVIRONMENT_NAME}/before_script.sh
+    - . ./.deploy/${CI_ENVIRONMENT_NAME}/before_script.sh
+  script:
+    - chmod +x ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
+    - . ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
+
+testing:build:
+  stage: build
+  only:
+    - master
+  variables:
+    APP_URL: $APP_URL_TESTING
+    DEPLOY_ENDPOINT: $DEPLOY_ENDPOINT_TESTING
+    SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY_TESTING
+  environment:
+    name: testing
+    url: $APP_URL
+  before_script:
+    - chmod +x ./.deploy/${CI_ENVIRONMENT_NAME}/before_script.sh
+    - . ./.deploy/${CI_ENVIRONMENT_NAME}/before_script.sh
+  script:
+    - chmod +x ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
+    - . ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
+
+testing:test:
+  stage: test
+  only:
+    - master
+  variables:
+    APP_URL: $APP_URL_TESTING
+    DEPLOY_ENDPOINT: $DEPLOY_ENDPOINT_TESTING
+    SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY_TESTING
+  environment:
+    name: testing
+    url: $APP_URL
+  before_script:
+    - chmod +x ./.deploy/${CI_ENVIRONMENT_NAME}/before_script.sh
+    - . ./.deploy/${CI_ENVIRONMENT_NAME}/before_script.sh
+  script:
+    - chmod +x ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
+    - . ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
+
+testing:deploy:
+  stage: deploy
+  only:
+    - master
+  variables:
+    APP_URL: $APP_URL_TESTING
+    DEPLOY_ENDPOINT: $DEPLOY_ENDPOINT_TESTING
+    SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY_TESTING
+  environment:
+    name: testing
+    url: $APP_URL
+  before_script:
+    - chmod +x ./.deploy/${CI_ENVIRONMENT_NAME}/before_script.sh
+    - . ./.deploy/${CI_ENVIRONMENT_NAME}/before_script.sh
+  script:
+    - chmod +x ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
+    - . ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh

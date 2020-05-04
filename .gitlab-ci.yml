@@ -6,83 +6,59 @@ stages:
   - test
   - deploy
 
-# Base variables
+### Variables
 # See: https://gitlab.com/gitlab-org/gitlab-runner/-/issues/1809
 variables:
   # All
   REPOSITORY_URL: $CI_REPOSITORY_URL
+  TARGET_DIRECTORY: 'connector'
   # Testing
   APP_URL_TESTING: 'https://connector.widget.wcasg.solarix.dev'
   DEPLOY_ENDPOINT_TESTING: 'connector.widget.wcasg.solarix.dev'
+### End Variables
+
+### Shared
+.all_before_script: &all_before_script
+  - echo "CI_COMMIT_REF_NAME ${CI_COMMIT_REF_NAME}"
+  - echo "CI_COMMIT_BRANCH ${CI_COMMIT_BRAND}"
+  - echo "CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME ${CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME}"
+  - echo "CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME ${CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME}"
+  - echo "CI_MERGE_REQUEST_SOURCE_BRANCH_NAME ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME}"
+  - echo "CI_MERGE_REQUEST_TARGET_BRANCH_NAME ${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}"
+  - chmod +x ./.deploy/all/before_script.sh
+  - . ./.deploy/all/before_script.sh
+### End Shared
+
+### Testing
+.testing_template: &testing_template
+  only:
+    - master
+  variables:
+    APP_URL: $APP_URL_TESTING
+    DEPLOY_ENDPOINT: $DEPLOY_ENDPOINT_TESTING
+    SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY_TESTING
+  environment:
+    name: testing
+    url: $APP_URL
+  before_script:
+    - *all_before_script
+  script:
+    - chmod +x ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
+    - . ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
 
 testing:setup:
   stage: setup
-  only:
-    - master
-  variables:
-    APP_URL: $APP_URL_TESTING
-    DEPLOY_ENDPOINT: $DEPLOY_ENDPOINT_TESTING
-    SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY_TESTING
-  environment:
-    name: testing
-    url: $APP_URL
-  before_script:
-    - chmod +x ./.deploy/${CI_ENVIRONMENT_NAME}/before_script.sh
-    - . ./.deploy/${CI_ENVIRONMENT_NAME}/before_script.sh
-  script:
-    - chmod +x ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
-    - . ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
+  <<: *testing_template
 
 testing:build:
   stage: build
-  only:
-    - master
-  variables:
-    APP_URL: $APP_URL_TESTING
-    DEPLOY_ENDPOINT: $DEPLOY_ENDPOINT_TESTING
-    SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY_TESTING
-  environment:
-    name: testing
-    url: $APP_URL
-  before_script:
-    - chmod +x ./.deploy/${CI_ENVIRONMENT_NAME}/before_script.sh
-    - . ./.deploy/${CI_ENVIRONMENT_NAME}/before_script.sh
-  script:
-    - chmod +x ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
-    - . ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
+  <<: *testing_template
 
 testing:test:
   stage: test
-  only:
-    - master
-  variables:
-    APP_URL: $APP_URL_TESTING
-    DEPLOY_ENDPOINT: $DEPLOY_ENDPOINT_TESTING
-    SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY_TESTING
-  environment:
-    name: testing
-    url: $APP_URL
-  before_script:
-    - chmod +x ./.deploy/${CI_ENVIRONMENT_NAME}/before_script.sh
-    - . ./.deploy/${CI_ENVIRONMENT_NAME}/before_script.sh
-  script:
-    - chmod +x ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
-    - . ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
+  <<: *testing_template
 
 testing:deploy:
   stage: deploy
-  only:
-    - master
-  variables:
-    APP_URL: $APP_URL_TESTING
-    DEPLOY_ENDPOINT: $DEPLOY_ENDPOINT_TESTING
-    SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY_TESTING
-  environment:
-    name: testing
-    url: $APP_URL
-  before_script:
-    - chmod +x ./.deploy/${CI_ENVIRONMENT_NAME}/before_script.sh
-    - . ./.deploy/${CI_ENVIRONMENT_NAME}/before_script.sh
-  script:
-    - chmod +x ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
-    - . ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
+  <<: *testing_template
+### End Testing

@@ -5,6 +5,7 @@ stages:
   - build
   - test
   - deploy
+  - healthcheck
 
 ### Variables
 # See: https://gitlab.com/gitlab-org/gitlab-runner/-/issues/1809
@@ -18,15 +19,24 @@ variables:
 ### End Variables
 
 ### Shared
+# Perform pre-script tasks
 .all_before_script: &all_before_script
-  - echo "CI_COMMIT_REF_NAME ${CI_COMMIT_REF_NAME}"
-  - echo "CI_COMMIT_BRANCH ${CI_COMMIT_BRAND}"
-  - echo "CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME ${CI_EXTERNAL_PULL_REQUEST_SOURCE_BRANCH_NAME}"
-  - echo "CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME ${CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME}"
-  - echo "CI_MERGE_REQUEST_SOURCE_BRANCH_NAME ${CI_MERGE_REQUEST_SOURCE_BRANCH_NAME}"
-  - echo "CI_MERGE_REQUEST_TARGET_BRANCH_NAME ${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}"
   - chmod +x ./.deploy/all/before_script.sh
   - . ./.deploy/all/before_script.sh
+
+# Execute environment-specific, job stage script.
+.all_deployment_script: &all_deployment_script
+  script:
+    - chmod +x ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
+    - . ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
+
+# Run simple health check on final URL after 10 second delay
+.all_health_check: &all_health_check
+  when: delayed
+    start_in: 10 seconds
+  script:
+    - chmod +x ./.deploy/all/healtcheck.sh
+    - . ./.deploy/all/healtcheck.sh
 ### End Shared
 
 ### Testing
@@ -42,23 +52,29 @@ variables:
     url: $APP_URL
   before_script:
     - *all_before_script
-  script:
-    - chmod +x ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
-    - . ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
 
 testing:setup:
   stage: setup
   <<: *testing_template
+  <<: *all_deployment_script
 
 testing:build:
   stage: build
   <<: *testing_template
+  <<: *all_deployment_script
 
 testing:test:
   stage: test
   <<: *testing_template
+  <<: *all_deployment_script
 
 testing:deploy:
   stage: deploy
   <<: *testing_template
+  <<: *all_deployment_script
+
+testing:healthcheck:
+  stage: healthcheck
+  <<: *testing_template
+  <<: *all_health_check
 ### End Testing

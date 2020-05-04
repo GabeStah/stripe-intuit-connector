@@ -28,10 +28,10 @@ export class IntuitController {
     return this.authService.callback(request);
   }
 
-  @Get('redis')
-  redis(): any {
-    return this.service.redis();
-  }
+  // @Get('redis')
+  // redis(): any {
+  //   return this.service.redis();
+  // }
 
   @MessagePattern({ type: 'redis_test' })
   redisMessage(data: any): string {

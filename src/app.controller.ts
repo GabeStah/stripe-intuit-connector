@@ -5,6 +5,6 @@ import { Request, Response } from 'express';
 export class AppController {
   @Get('healthcheck')
   async healthcheck(@Req() request: Request, @Res() response: Response) {
-    return response.json({ statusCode: 200, message: 'success' });
+    return response.json({ statusCode: 200, message: 'Success' });
   }
 }

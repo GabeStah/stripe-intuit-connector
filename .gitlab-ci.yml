@@ -46,7 +46,7 @@ variables:
 ### Testing
 .testing_template: &testing_template
   only:
-    - master
+    - testing
   variables:
     APP_URL: $APP_URL_TESTING
     DEPLOY_ENDPOINT: $DEPLOY_ENDPOINT_TESTING
@@ -86,7 +86,7 @@ testing:healthcheck:
 ### Production
 .production_template: &production_template
   only:
-    - production
+    - master
   variables:
     APP_URL: $APP_URL_PRODUCTION
     DEPLOY_ENDPOINT: $DEPLOY_ENDPOINT_PRODUCTION

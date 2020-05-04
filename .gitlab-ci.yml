@@ -16,6 +16,9 @@ variables:
   # Testing
   APP_URL_TESTING: 'https://connector.widget.wcasg.solarix.dev'
   DEPLOY_ENDPOINT_TESTING: 'connector.widget.wcasg.solarix.dev'
+  # Production
+  APP_URL_PRODUCTION: 'https://connector.widget.wcasg.solarix.host'
+  DEPLOY_ENDPOINT_PRODUCTION: 'connector.widget.wcasg.solarix.host'
 ### End Variables
 
 ### Shared
@@ -25,10 +28,10 @@ variables:
   - . ./.deploy/all/before_script.sh
 
 # Execute environment-specific, job stage script.
-.all_deployment_script: &all_deployment_script
+.all_script: &all_script
   script:
-    - chmod +x ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
-    - . ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
+    - chmod +x ./.deploy/all/${CI_JOB_STAGE}.sh
+    - . ./.deploy/all/${CI_JOB_STAGE}.sh
 
 # Run simple health check on final URL
 .all_health_check: &all_health_check
@@ -57,25 +60,65 @@ variables:
 testing:setup:
   stage: setup
   <<: *testing_template
-  <<: *all_deployment_script
+  <<: *all_script
 
 testing:build:
   stage: build
   <<: *testing_template
-  <<: *all_deployment_script
+  <<: *all_script
 
 testing:test:
   stage: test
   <<: *testing_template
-  <<: *all_deployment_script
+  <<: *all_script
 
 testing:deploy:
   stage: deploy
   <<: *testing_template
-  <<: *all_deployment_script
+  <<: *all_script
 
 testing:healthcheck:
   stage: healthcheck
   <<: *testing_template
   <<: *all_health_check
 ### End Testing
+
+### Production
+.production_template: &production_template
+  only:
+    - production
+  variables:
+    APP_URL: $APP_URL_PRODUCTION
+    DEPLOY_ENDPOINT: $DEPLOY_ENDPOINT_PRODUCTION
+    SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY_PRODUCTION
+  environment:
+    name: production
+    url: $APP_URL
+  before_script:
+    - *all_before_script
+
+production:setup:
+  stage: setup
+  <<: *production_template
+  <<: *all_script
+
+production:build:
+  stage: build
+  <<: *production_template
+  <<: *all_script
+
+production:test:
+  stage: test
+  <<: *production_template
+  <<: *all_script
+
+production:deploy:
+  stage: deploy
+  <<: *production_template
+  <<: *all_script
+
+production:healthcheck:
+  stage: healthcheck
+  <<: *production_template
+  <<: *all_health_check
+### End Production

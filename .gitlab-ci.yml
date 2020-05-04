@@ -13,12 +13,6 @@ variables:
   # All
   REPOSITORY_URL: $CI_REPOSITORY_URL
   TARGET_DIRECTORY: 'connector'
-  # Testing
-  APP_URL_TESTING: 'https://connector.widget.wcasg.solarix.dev'
-  DEPLOY_ENDPOINT_TESTING: 'connector.widget.wcasg.solarix.dev'
-  # Production
-  APP_URL_PRODUCTION: 'https://connector.widget.wcasg.solarix.host'
-  DEPLOY_ENDPOINT_PRODUCTION: 'connector.widget.wcasg.solarix.host'
 ### End Variables
 
 ### Shared
@@ -27,20 +21,18 @@ variables:
   - chmod +x ./.deploy/all/before_script.sh
   - . ./.deploy/all/before_script.sh
 
-# Execute environment-specific, job stage script.
-.all_script: &all_script
-  script:
-    - chmod +x ./.deploy/all/${CI_JOB_STAGE}.sh
-    - . ./.deploy/all/${CI_JOB_STAGE}.sh
+# Execute job stage script.
+.all_job_stage_script: &all_job_stage_script
+  - chmod +x ./.deploy/all/${CI_JOB_STAGE}.sh
+  - . ./.deploy/all/${CI_JOB_STAGE}.sh
 
 # Run simple health check on final URL
-.all_health_check: &all_health_check
+.all_health_check_script: &all_health_check_script
   # Delay is unnecessary for this app
   #when: delayed
   #start_in: 10 seconds
-  script:
-    - chmod +x ./.deploy/all/healthcheck.sh
-    - . ./.deploy/all/healthcheck.sh
+  - chmod +x ./.deploy/all/healthcheck.sh
+  - . ./.deploy/all/healthcheck.sh
 ### End Shared
 
 ### Testing
@@ -48,39 +40,43 @@ variables:
   only:
     - testing
   variables:
-    APP_URL: $APP_URL_TESTING
-    DEPLOY_ENDPOINT: $DEPLOY_ENDPOINT_TESTING
+    DEPLOY_ENDPOINT: 'connector.widget.wcasg.solarix.dev'
     SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY_TESTING
   environment:
     name: testing
-    url: $APP_URL
+    url: 'https://connector.widget.wcasg.solarix.dev'
   before_script:
     - *all_before_script
 
 testing:setup:
   stage: setup
   <<: *testing_template
-  <<: *all_script
+  script:
+    - *all_job_stage_script
 
 testing:build:
   stage: build
   <<: *testing_template
-  <<: *all_script
+  script:
+    - *all_job_stage_script
 
 testing:test:
   stage: test
   <<: *testing_template
-  <<: *all_script
+  script:
+    - *all_job_stage_script
 
 testing:deploy:
   stage: deploy
   <<: *testing_template
-  <<: *all_script
+  script:
+    - *all_job_stage_script
 
 testing:healthcheck:
   stage: healthcheck
   <<: *testing_template
-  <<: *all_health_check
+  script:
+    - *all_health_check_script
 ### End Testing
 
 ### Production
@@ -88,37 +84,41 @@ testing:healthcheck:
   only:
     - master
   variables:
-    APP_URL: $APP_URL_PRODUCTION
-    DEPLOY_ENDPOINT: $DEPLOY_ENDPOINT_PRODUCTION
+    DEPLOY_ENDPOINT: 'connector.widget.wcasg.solarix.host'
     SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY_PRODUCTION
   environment:
     name: production
-    url: $APP_URL
+    url: 'https://connector.widget.wcasg.solarix.host'
   before_script:
     - *all_before_script
 
 production:setup:
   stage: setup
   <<: *production_template
-  <<: *all_script
+  script:
+    - *all_job_stage_script
 
 production:build:
   stage: build
   <<: *production_template
-  <<: *all_script
+  script:
+    - *all_job_stage_script
 
 production:test:
   stage: test
   <<: *production_template
-  <<: *all_script
+  script:
+    - *all_job_stage_script
 
 production:deploy:
   stage: deploy
   <<: *production_template
-  <<: *all_script
+  script:
+    - *all_job_stage_script
 
 production:healthcheck:
   stage: healthcheck
   <<: *production_template
-  <<: *all_health_check
+  script:
+    - *all_health_check_script
 ### End Production

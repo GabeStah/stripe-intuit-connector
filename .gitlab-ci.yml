@@ -30,13 +30,14 @@ variables:
     - chmod +x ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
     - . ./.deploy/${CI_ENVIRONMENT_NAME}/${CI_JOB_STAGE}.sh
 
-# Run simple health check on final URL after 10 second delay
+# Run simple health check on final URL
 .all_health_check: &all_health_check
-  when: delayed
-  start_in: 10 seconds
+  # Delay is unnecessary for this app
+#  when: delayed
+#  start_in: 10 seconds
   script:
-    - chmod +x ./.deploy/all/healtcheck.sh
-    - . ./.deploy/all/healtcheck.sh
+    - chmod +x ./.deploy/all/healthcheck.sh
+    - . ./.deploy/all/healthcheck.sh
 ### End Shared
 
 ### Testing

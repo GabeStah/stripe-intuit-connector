@@ -1,6 +1,29 @@
-## Description
+- [Installation](#installation)
+- [Running Connector](#running-connector)
+- [Usage](#usage)
+- [Development](#development)
+  - [Environment Configuration](#environment-configuration)
+  - [Connect to MongoDB](#connect-to-mongodb)
+  - [Connect to Redis](#connect-to-redis)
+  - [Stripe Webhooks](#stripe-webhooks)
+  - [Postman](#postman)
+  - [Debugging](#debugging)
+  - [Queue / Job Monitoring](#queue--job-monitoring)
+- [Testing](#testing)
+- [Infrastructure](#infrastructure)
+  - [Testing Environment](#testing-environment)
+  - [Production Environment](#production-environment)
+  - [Accessing MongoDB](#accessing-mongodb)
+- [Deployment](#deployment)
+- [Intuit Authentication & Authorization](#intuit-authentication--authorization)
+- [Relationship Logic](#relationship-logic)
+  - [Stripe Product :: Intuit Item Category](#stripe-product--intuit-item-category)
+  - [Stripe Plan :: Intuit Item](#stripe-plan--intuit-item)
+  - [Stripe Customer :: Intuit Customer](#stripe-customer--intuit-customer)
+  - [Stripe Invoice :: Intuit Invoice](#stripe-invoice--intuit-invoice)
+  - [Stripe Payment Intent :: Intuit Payment](#stripe-payment-intent--intuit-payment)
 
-Headless API for connecting Stripe :: QuickBooks Online.
+Connector is a headless API service for pushing Stripe webhook requests to QuickBooks Online.
 
 Based on [Nest](https://github.com/nestjs/nest) TypeScript framework.
 
@@ -23,11 +46,30 @@ $ yarn run start:dev
 $ yarn run start:prod
 ```
 
+## Usage
+
+At its core, Connector actively listens for an incoming webhook request from Stripe, processes that request, and passes it along to the Intuit QuickBooks Online API.
+
+1. Stripe sends a webhook request for monitored events to the `/v1/stripe/webhook` endpoint.
+2. Connector immediately queues a job in the internal `stripe` Redis cache with the Stripe event object.  Connector responds to Stripe indicating a successful job creation.
+3. The [StripeWebhookQueueService](src/queue/stripe/stripe-webhook-queue.service.ts) detects the generated job and validates the request event.
+4. The Stripe event object is converted into a valid Intuit QBO API object via an appropriate extension class of the [StripeIntuitAdapterService](src/adapters/stripe-intuit/stripe-intuit-adapter.service.ts).
+5. For example, a `customer.created` Stripe event converts the Stripe object to an Intuit `Customer` object via [StripeCustomerToIntuitCustomer](src/adapters/stripe-intuit/customer/stripe-customer-to-intuit-customer.ts).
+6. The converted object is passed to the high-level [IntuitService](src/intuit/intuit.service.ts) which provides basic CRUD-like methods for interacting with the Intuit API.
+7. Once the Intuit object is processed a Intuit API request is sent with valid OAuth2 headers obtained via the [IntuitAuthorizationService](src/intuit/intuit-authorization.service.ts).  See [Intuit Authentication & Authorization](#intuit-authentication--authorization).
+8. Finally, the record is created (or updated) within Intuit QuickBooks Online.
+
 ## Development
+
+### Environment Configuration
+
+The configuration schema is defined in the [src/config/config.ts](src/config/config.ts) file using Mozilla's [Convict](https://github.com/mozilla/node-convict/tree/master/packages/convict) package and schema specification.
+
+To update an environment-specific value just update the appropriate `[environment].json` file in the `/config` directory.
 
 ### Connect to MongoDB
 
-Open an SSH tunnel connect to `wcasg-audit-mongo-a` Mongo server.
+Open an SSH tunnel connect to the Mongo server.
 
 - `yarn run dev:db:mongo:ssh-tunnel` to SSH as `root`.
 
@@ -36,7 +78,7 @@ Open an SSH tunnel connect to `wcasg-audit-mongo-a` Mongo server.
 If Docker installed run Redis in Docker container:
 
 - Attached: `yarn run dev:db:redis`
-- Dettached: `yarn run dev:db:redis:detached`
+- Detached: `yarn run dev:db:redis:detached`
 
 ### Stripe Webhooks
 
@@ -49,7 +91,7 @@ If Docker installed run Redis in Docker container:
 
 ### Postman
 
-[Postman](https://www.postman.com/) import JSON can be found here: https://www.postman.com/collections/b2cab534466822feadeb
+~~[Postman](https://www.postman.com/) import JSON can be found here: https://www.postman.com/collections/b2cab534466822feadeb~~ Out of date.
 
 ### Debugging
 
@@ -59,35 +101,6 @@ Run `./node_modules/@nestjs/cli/bin/nest.js start --watch` targeting `src/main.t
 
 1. Launch both Redis and Connector.
 2. Visit [http://localhost:4321/v1/admin/queue](http://localhost:4321/v1/admin/queue).
-
-## Deployment
-
-### Staging
-
-- Base URL: `http://wcasg-connector.pngpub.com:4321/`
-- Intuit Reauth URL: `http://wcasg-connector.pngpub.com:4321/v1/intuit/authorize`
-- Stripe Webhook Endpoint: `http://wcasg-connector.pngpub.com:4321/v1/stripe/webhook`
-
----
-
-- App: AWS EC2
-  - Name: `wcasg-connector`
-  - Type: `t2.small`
-  - Public / Elastic IP: `100.21.12.193`
-- Redis: AWS 
-  - Name: `wcasg-connector-redis`
-  - Nodes: `1`
-  - NodeType: `cache.t2.small`
-  - Endpoint: `wcasg-connector-redis.btdm1a.0001.usw2.cache.amazonaws.com`
-  - Port: `6379`
-- VPC
-  - ID: `vpc-0b54e9694c2377fc2`
-  - Name: `vpc-wcasg`
-  - Security Groups
-    - `sec-wcasg-web` - Opens ports 80 and 443
-    - `sec-wcasg-ssh` - Opens port 22
-    - `sec-wcasg-connector-4321` - Opens port 4321 to outside traffic
-    - `sg-065c0296ab1569aa8` - Opens incoming port 6379 between Redis and EC2
 
 ## Testing
 
@@ -102,6 +115,49 @@ $ yarn run test:e2e
 $ yarn run test:cov
 ```
 
+## Infrastructure
+
+The Connector and WCASG Audit apps share environment-specific deployment servers, along with their associated MongoDB service.
+
+### Testing Environment
+
+- SRN: `srn:ec2:wcasg:widget:audit-connector:testing::instance`
+- Endpoint: `connector.widget.wcasg.solarix.dev`
+
+### Production Environment
+
+- SRN: `srn:ec2:wcasg:widget:audit-connector:production::instance`
+- Endpoint (Solarix): `connector.widget.wcasg.solarix.host`
+- Endpoint (Client): `connector.wcasg.com`
+
+### Accessing MongoDB
+
+To directly connect:
+
+1. Open AWS console and adjust `srn:vpc:wcasg:widget:connector::sg/instance` security group.
+2. Add an `inbound rule` allowing `TCP 27017` from your private IP address.
+3. Now connect to server's mongodb port: 
+  - Development: `mongodb://connector.widget.wcasg.solarix.dev:27017/pa11y-webservice-development`
+  - Testing: `mongodb://connector.widget.wcasg.solarix.dev:27017/pa11y-webservice-testing`
+  - Production: `mongodb://connector.widget.wcasg.solarix.host:27017/pa11y-webservice-production`
+
+To connect via SSH tunnel:
+
+1. Make sure you have a local copy of the `srn:ec2:solarix:core::pem/dev` SSH key.
+2. Establish a tunnelled connection:
+  - Development: `ssh -L 4321:localhost:27017 ubuntu@connector.widget.wcasg.solarix.dev -f -N -i ~/.ssh/path/to/solarix__pem_dev.pem`
+  - Testing: `ssh -L 4321:localhost:27017 ubuntu@connector.widget.wcasg.solarix.dev -f -N -i ~/.ssh/path/to/solarix__pem_dev.pem`
+  - Production: `ssh -L 4321:localhost:27017 ubuntu@connector.widget.wcasg.solarix.host -f -N -i ~/.ssh/path/to/solarix__pem_dev.pem`
+3. Localhost port `4321` can now access MongoDB: `mongo --port 4321`
+
+## Deployment
+
+1. Make changes and push to new feature branch or `testing` branch.
+2. Updates to `testing` branch execute GitLab CI/CD and will deploy changes to testing (`srn:ec2:wcasg:widget:audit-connector:testing::instance`).
+3. Verify testing environment.
+4. If stable, generate merge request into `production` environment.
+5. Upon merge, GitLab CI/CD will deploy to production (`srn:ec2:wcasg:widget:audit-connector:production::instance`).
+
 ## Intuit Authentication & Authorization
 
 The Intuit API requires [OAuth 2.0 authorization](https://developer.intuit.com/app/developer/qbo/docs/develop/authentication-and-authorization) for all connecting apps. This **requires** a manual user consent interaction every 101 days, at most, due to the expiration time of the `rememberToken` Intuit API assigns.
@@ -110,11 +166,11 @@ The following is the current implementation of Connector to handle Intuit API au
 
 1. For a fresh install with no existing database record a request to Intuit API will fail due to bad auth.
 2. A user must manually authorize the Connector app (specifically, the `callback` endpoint it defines).
-3. At present, this is accomplished by sending a `GET` request to `/v1/intuit/authorize`. This creates an authorization URL with proper scope in the [intuit.controller@authorize()](src/intuit/intuit.controller.ts#L42) and redirects to the user to that authorization URL (on the Intuit site).
+3. This is accomplished by sending a `GET` request to `/v1/intuit/authorize`. This creates an authorization URL with proper scope in the [intuit.controller@authorize()](src/intuit/intuit.controller.ts#L17) and redirects to the user to that authorization URL (on the Intuit site).
 4. The user then elects to consent for the Connector app to be given authorization to the specified account.
-5. The user is redirects to the `callback` endpoint which invokes the [intuit.controller@callback()](src/intuit/intuit.controller.ts#L63) method. This method generates an async `accessToken` and `refreshToken`, which is added to (or updated) in the database for future requests.
+5. The user is redirects to the `callback` endpoint which invokes the [intuit.controller@callback()](src/intuit/intuit.controller.ts#L27) method. This method generates an async `accessToken` and `refreshToken`, which is added to (or updated) in the database for future requests.
 6. An `accessToken` expires after only 60 minutes, while a `refreshToken` (which can be used to programmatically generate a new `acessToken`) lasts 101 days.
-7. Thus, all future requests while a valid `refreshToken` exists will use that to generate `accessTokens` without the need for user consent.
+7. Thus, all future requests will use the existing `refreshToken` to generate `accessTokens` without the need for user consent.
 8. Eventually, the app will have no valid `refreshToken` and must be manually consented by the user.
 
 ## Relationship Logic

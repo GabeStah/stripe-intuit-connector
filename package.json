@@ -7,7 +7,8 @@
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
-    "dev:db:mongo:ssh-tunnel": "ssh -L 4433:localhost:27017 root@167.172.199.242 -f -N",
+    "dev:db:mongo:ssh-tunnel": "ssh -L 4321:localhost:27017 ubuntu@audit.widget.wcasg.solarix.dev -f -N -i C:\\Users\\Gabe\\.ssh\\aws\\solarix__pem_dev.pem",
+    "production:db:mongo:ssh-tunnel": "ssh -L 4321:localhost:27017 ubuntu@audit.widget.wcasg.solarix.host -f -N -i C:\\Users\\Gabe\\.ssh\\aws\\solarix__pem_dev.pem",
     "dev:db:redis": "docker-compose -f docker/redis/docker-compose.yml up",
     "dev:db:redis:detached": "docker-compose -f docker/redis/docker-compose.yml up -d",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",

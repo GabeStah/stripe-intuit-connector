@@ -4,12 +4,14 @@ import { AppService } from './app.service';
 import { SetBodyParser } from 'src/middleware/set-body-parser.middleware';
 import { WinstonModule } from 'nest-winston';
 import winston from 'winston';
+import WinstonCloudWatch from 'winston-cloudwatch';
 import WinstonDailyRotateFile from 'winston-daily-rotate-file';
 import { StripeWebhookQueueModule } from 'src/queue/stripe/stripe-webhook-queue.module';
 import { MailModule } from 'src/mail/mail.module';
 import { RedisModule } from 'src/redis/redis.module';
 import { IntuitQueueModule } from 'src/queue/intuit/intuit-queue.module';
 import { BullBoardMiddleware } from 'src/middleware/bull-board.middleware';
+import config from 'src/config/config';
 
 const winstonModule = WinstonModule.forRoot({
   level: 'info',
@@ -30,6 +32,15 @@ const winstonModule = WinstonModule.forRoot({
     new winston.transports.File({
       filename: 'logs/error.log',
       level: 'error'
+    }),
+    new WinstonCloudWatch({
+      awsAccessKeyId: config.get('services.aws.cloudwatch.awsAccessKeyId'),
+      awsRegion: config.get('services.aws.cloudwatch.awsRegion'),
+      awsSecretKey: config.get('services.aws.cloudwatch.awsSecretKey'),
+      logGroupName: config.get('services.aws.cloudwatch.logGroupName'),
+      retentionInDays: config.get('services.aws.cloudwatch.retentionInDays'),
+      logStreamName: config.get('services.aws.cloudwatch.logStreamName'),
+      jsonMessage: true
     }),
     new WinstonDailyRotateFile({
       dirname: 'logs/debug',

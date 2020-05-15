@@ -49,6 +49,7 @@
     "stripe": "^8.29.0",
     "uniqid": "^5.2.0",
     "winston": "^3.2.1",
+    "winston-cloudwatch": "^2.3.2",
     "winston-daily-rotate-file": "^4.4.2"
   },
   "devDependencies": {

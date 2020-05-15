@@ -8,6 +8,11 @@ import config from 'src/config/config';
 export class RedisService {
   protected redis: IORedis.Redis;
   constructor() {
+    console.log(
+      `Connecting to Redis: ${config.get('db.redis.host')}:${config.get(
+        'db.redis.port'
+      )}`
+    );
     this.redis = new Redis({
       host: config.get('db.redis.host'),
       port: config.get('db.redis.port')

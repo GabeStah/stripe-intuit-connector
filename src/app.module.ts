@@ -40,7 +40,8 @@ const winstonModule = WinstonModule.forRoot({
       logGroupName: config.get('services.aws.cloudwatch.logGroupName'),
       retentionInDays: config.get('services.aws.cloudwatch.retentionInDays'),
       logStreamName: config.get('services.aws.cloudwatch.logStreamName'),
-      jsonMessage: true
+      jsonMessage: true,
+      level: 'debug'
     }),
     new WinstonDailyRotateFile({
       dirname: 'logs/debug',

@@ -80,6 +80,24 @@ If Docker installed run Redis in Docker container:
 - Attached: `yarn run dev:db:redis`
 - Detached: `yarn run dev:db:redis:detached`
 
+#### Remote ElastiCache Connection
+
+1. Establish SSH bastion connection to internal VPC Public Subnet instance (i.e. `dashboard.widget.wcasg.solarix.dev`) and tunnel into private RDS instance:
+
+```
+ssh -f -N -L 6379:widget-wcasg-production-redis.btdm1a.0001.usw2.cache.amazonaws.com:6379 ubuntu@dashboard.widget.wcasg.solarix.dev -i C:\Users\Gabe\.ssh\aws\solarix__pem_dev.pem
+```
+
+2. Open another terminal to access remote Redis:
+
+```
+$ redli KEYS *
+1) "IntuitAuthorizationTokens"
+2) "bull:intuit:id"
+3) "bull:mail:4n19w0a4xka8dmbm5"
+4) "bull:mail:id"
+```
+
 ### Stripe Webhooks
 
 1. Install [Stripe CLI](https://stripe.com/docs/stripe-cli).

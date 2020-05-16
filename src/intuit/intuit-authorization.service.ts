@@ -58,6 +58,9 @@ export class IntuitAuthorizationService implements OnModuleInit {
         config.get('routes.intuit.callback')
     });
 
+    // Clear tokens on init
+    await this.redisService.del('IntuitAuthorizationTokens');
+
     // Update auth tokens from db
     await this.updateTokensFromDb();
 

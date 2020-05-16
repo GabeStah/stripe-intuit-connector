@@ -19,6 +19,10 @@ export class RedisService {
     });
   }
 
+  async del(key) {
+    return await this.redis.del(key);
+  }
+
   async get<TResult>(key) {
     const flattened = await this.redis.hgetall(key);
     return flat.unflatten<Record<string, string>, TResult>(flattened);

@@ -1,7 +1,6 @@
 import { Process, Processor } from '@nestjs/bull';
-import { Inject, Logger } from '@nestjs/common';
 import { Job } from 'bull';
-import config from 'src/config/config';
+import config from 'src/config';
 import { IntuitEntityType } from 'src/intuit/intuit.service';
 import { StripeCustomerToIntuitCustomer } from 'src/adapters/stripe-intuit/customer/stripe-customer-to-intuit-customer';
 import {
@@ -15,20 +14,21 @@ import { StripePlanToIntuitItem } from 'src/adapters/stripe-intuit/plan/stripe-p
 import Stripe from 'stripe';
 import { StripeInvoiceToIntuitInvoice } from 'src/adapters/stripe-intuit/invoice/stripe-invoice-to-intuit-invoice';
 import { StripeInvoiceToIntuitPayment } from 'src/adapters/stripe-intuit/payment/stripe-invoice-to-intuit-payment';
+import { LogService } from 'src/log/log.service';
 
 @Processor(config.get('queue.stripe.name'))
 export class StripeWebhookQueueService extends BaseQueueService {
   private stripe: Stripe;
   constructor(
-    @Inject('winston') protected readonly logger: Logger,
     protected readonly customerAdapter: StripeCustomerToIntuitCustomer,
+    protected readonly log: LogService,
     protected readonly invoiceAdapter: StripeInvoiceToIntuitInvoice,
     protected readonly invoicePaymentAdapter: StripeInvoiceToIntuitPayment,
     protected readonly planAdapter: StripePlanToIntuitItem,
     protected readonly productAdapter: StripeProductToIntuitItem,
     protected readonly stripeIntuitAdapter: StripeIntuitAdapterService
   ) {
-    super(logger);
+    super(log);
 
     this.stripe = new Stripe(config.get('services.stripe.secret'), {
       apiVersion: '2020-03-02'

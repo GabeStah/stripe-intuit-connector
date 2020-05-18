@@ -22,8 +22,6 @@ export class IntuitQueueService extends BaseQueueService
   }
 
   async onModuleInit(): Promise<any> {
-    this.log.log('Hello world');
-
     // Schedule auto refresh job.
     // Won't add new job if one with same name exists.
     await this.queue.add(

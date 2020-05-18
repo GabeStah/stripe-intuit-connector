@@ -72,6 +72,16 @@ testing:deploy:
   script:
     - *all_job_stage_script
 
+# Flush Redis cache
+# (optional, manual)
+testing:deploy:flush_cache:
+  stage: deploy
+  <<: *testing_template
+  when: manual
+  script:
+    - chmod +x ./.deploy/all/deploy_flush_cache.sh
+    - . ./.deploy/all/deploy_flush_cache.sh
+
 testing:healthcheck:
   stage: healthcheck
   <<: *testing_template
@@ -115,6 +125,16 @@ production:deploy:
   <<: *production_template
   script:
     - *all_job_stage_script
+
+# Flush Redis cache
+# (optional, manual)
+production:deploy:flush_cache:
+  stage: deploy
+  <<: *production_template
+  when: manual
+  script:
+    - chmod +x ./.deploy/all/deploy_flush_cache.sh
+    - . ./.deploy/all/deploy_flush_cache.sh
 
 production:healthcheck:
   stage: healthcheck

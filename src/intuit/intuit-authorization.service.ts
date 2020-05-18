@@ -95,10 +95,7 @@ export class IntuitAuthorizationService implements OnModuleInit {
     if (response) {
       this.authTokens = updated;
     }
-    this.log.debug({
-      message: 'Tokens updated',
-      tokens: this.authTokens
-    });
+    this.log.event('tokens.updated', this.authTokens);
     return this.authTokens;
   }
 

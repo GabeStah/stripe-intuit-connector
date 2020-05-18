@@ -33,6 +33,11 @@ export class StripeIntuitAdapterService extends Adapter {
   }
 
   async create({ type, data }: CreateParams) {
+    this.log.event('stripe_intuit_adapter.create', {
+      type,
+      data
+    });
+
     return this.intuit.create({
       type: type,
       data: data
@@ -40,6 +45,10 @@ export class StripeIntuitAdapterService extends Adapter {
   }
 
   async delete({ type, id }: DeleteParams) {
+    this.log.event('stripe_intuit_adapter.delete', {
+      type,
+      id
+    });
     // Find existing
     const existing = await this.intuit.read({
       type: type,
@@ -56,6 +65,12 @@ export class StripeIntuitAdapterService extends Adapter {
   }
 
   async update({ type, data, id, column }: UpdateParams) {
+    this.log.event('stripe_intuit_adapter.update', {
+      type,
+      id,
+      data,
+      column
+    });
     // Find existing
     const existing = await this.intuit.read({
       column,

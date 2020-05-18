@@ -10,8 +10,7 @@ export abstract class BaseQueueService {
 
   @OnQueueActive()
   onActive(job: Job) {
-    this.log.debug({
-      event: 'active',
+    this.log.event('queue.active', {
       event_id: job.data.id,
       job_id: job.id,
       name: job.name,
@@ -21,8 +20,7 @@ export abstract class BaseQueueService {
 
   @OnQueueStalled()
   onStalled(job: Job) {
-    this.log.debug({
-      event: 'stalled',
+    this.log.event('queue.stalled', {
       event_id: job.data.id,
       job_id: job.id,
       name: job.name,

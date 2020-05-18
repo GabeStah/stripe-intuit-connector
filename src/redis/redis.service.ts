@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import Redis from 'ioredis';
 import IORedis from 'ioredis';
 import flat from 'flat';
-import config from 'src/config/config';
+import config from 'src/config';
 
 @Injectable()
 export class RedisService {
@@ -26,6 +26,15 @@ export class RedisService {
   async get<TResult>(key) {
     const flattened = await this.redis.hgetall(key);
     return flat.unflatten<Record<string, string>, TResult>(flattened);
+  }
+
+  async getKeyCount() {
+    const keys = await this.redis.keys('*');
+    return keys.length;
+  }
+
+  async flushAll() {
+    return await this.redis.flushall();
   }
 
   async set(key: string, data: object) {

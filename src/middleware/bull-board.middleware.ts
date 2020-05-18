@@ -2,7 +2,7 @@ import { Injectable, NestMiddleware } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
 import { setQueues, UI } from 'bull-board';
 import Bull from 'bull';
-import config from 'src/config/config';
+import config from 'src/config';
 
 @Injectable()
 export class BullBoardMiddleware implements NestMiddleware {

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { StripeIntuitAdapterService } from 'src/adapters/stripe-intuit/stripe-intuit-adapter.service';
-import { IntuitEntityType } from '../../../intuit/intuit.service';
+import { IntuitEntityType } from 'src/intuit/intuit.service';
 import { toStripeId } from 'src/queue/stripe/stripe-webhook-queue.constants';
 
 /**
@@ -80,7 +80,7 @@ export class StripeInvoiceToIntuitInvoice extends StripeIntuitAdapterService {
         }
       }
 
-      const obj = {
+      return {
         DocNumber: toStripeId(this.get('id')),
         CustomerRef: {
           // Intuit Customer Id
@@ -88,9 +88,8 @@ export class StripeInvoiceToIntuitInvoice extends StripeIntuitAdapterService {
         },
         Line: lines
       };
-      return obj;
     } catch (e) {
-      this.logger.error(e);
+      this.log.error(e);
       throw e;
     }
   }

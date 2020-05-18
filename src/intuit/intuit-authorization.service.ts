@@ -1,18 +1,12 @@
-import {
-  HttpService,
-  Inject,
-  Injectable,
-  OnModuleInit,
-  Req
-} from '@nestjs/common';
+import { HttpService, Injectable, OnModuleInit, Req } from '@nestjs/common';
 import OAuthClient from 'intuit-oauth';
 import { Request } from 'express';
-import { Logger } from 'winston';
 import { Client, ClientRedis } from '@nestjs/microservices';
 import { MailService } from 'src/mail/mail.service';
 import { RedisService } from 'src/redis/redis.service';
 import { Transport } from '@nestjs/common/enums/transport.enum';
-import config from 'src/config/config';
+import config from 'src/config';
+import { LogService } from 'src/log/log.service';
 
 export interface IntuitAuthorizationTokens {
   readonly accessToken: string;
@@ -40,7 +34,7 @@ export class IntuitAuthorizationService implements OnModuleInit {
     private readonly httpService: HttpService,
     private readonly mailService: MailService,
     private readonly redisService: RedisService,
-    @Inject('winston') private readonly logger: Logger
+    private readonly log: LogService
   ) {}
 
   async onModuleInit() {
@@ -59,7 +53,7 @@ export class IntuitAuthorizationService implements OnModuleInit {
     });
 
     // Clear tokens on init
-    await this.redisService.del('IntuitAuthorizationTokens');
+    // await this.redisService.del('IntuitAuthorizationTokens');
 
     // Update auth tokens from db
     await this.updateTokensFromDb();
@@ -101,6 +95,10 @@ export class IntuitAuthorizationService implements OnModuleInit {
     if (response) {
       this.authTokens = updated;
     }
+    this.log.debug({
+      message: 'Tokens updated',
+      tokens: this.authTokens
+    });
     return this.authTokens;
   }
 
@@ -152,8 +150,7 @@ export class IntuitAuthorizationService implements OnModuleInit {
     } else {
       const error = `Cannot obtain valid Intuit authorization; manual authorization required.`;
       // Error
-      this.logger.error(error);
-      return error;
+      this.log.error(error);
     }
   }
 
@@ -168,7 +165,7 @@ export class IntuitAuthorizationService implements OnModuleInit {
   }: {
     shouldSendAlerts?: boolean;
   }) {
-    this.logger.error(
+    this.log.error(
       `Cannot obtain valid Intuit authorization; manual authorization required.`
     );
 
@@ -274,7 +271,7 @@ export class IntuitAuthorizationService implements OnModuleInit {
         this.buildTokensFromIntuitObject(response.token)
       );
     } else {
-      this.logger.error(
+      this.log.error(
         `Cannot obtain valid Intuit authorization; manual authorization required.`
       );
     }

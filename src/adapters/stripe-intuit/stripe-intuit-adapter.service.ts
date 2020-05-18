@@ -1,7 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Adapter } from 'src/adapters/adapter.service';
 import { IntuitEntityType, IntuitService } from 'src/intuit/intuit.service';
-import { Logger } from 'winston';
+import { LogService } from 'src/log/log.service';
 
 interface CreateParams {
   data: any;
@@ -26,10 +26,10 @@ interface UpdateParams {
 @Injectable()
 export class StripeIntuitAdapterService extends Adapter {
   constructor(
-    @Inject('winston') protected readonly logger: Logger,
+    protected readonly log: LogService,
     protected readonly intuit: IntuitService
   ) {
-    super(logger);
+    super(log);
   }
 
   async create({ type, data }: CreateParams) {

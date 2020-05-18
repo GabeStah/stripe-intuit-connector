@@ -1,7 +1,6 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import nodemailer from 'nodemailer';
 import Mail from 'nodemailer/lib/mailer';
-import { Logger } from 'winston';
 import {
   InjectQueue,
   OnQueueActive,
@@ -9,9 +8,10 @@ import {
   Process,
   Processor
 } from '@nestjs/bull';
-import config from 'src/config/config';
+import config from 'src/config';
 import { Job, Queue } from 'bull';
 import uniqid from 'uniqid';
+import { LogService } from 'src/log/log.service';
 
 @Injectable()
 @Processor(config.get('queue.mail.name'))
@@ -19,7 +19,7 @@ export class MailService {
   private readonly transporter: Mail;
 
   constructor(
-    @Inject('winston') private readonly logger: Logger,
+    private readonly log: LogService,
     @InjectQueue(config.get('queue.mail.name')) private readonly queue: Queue
   ) {
     if (!this.transporter) {
@@ -34,14 +34,12 @@ export class MailService {
    */
   @OnQueueActive()
   private onActive(job: Job) {
-    this.logger.debug({
+    this.log.debug({
       data: job.data,
       event: 'started',
-      job_id: job.id,
-      level: 'queue',
+      id: job.id,
       name: job.name,
-      processor: this.constructor.name,
-      timestamp: new Date().getTime()
+      processor: this.constructor.name
     });
   }
 
@@ -52,14 +50,12 @@ export class MailService {
    */
   @OnQueueCompleted()
   private onCompleted(job: Job) {
-    this.logger.debug({
+    this.log.debug({
       data: job.data,
       event: 'completed',
-      job_id: job.id,
-      level: 'queue',
+      id: job.id,
       name: job.name,
-      processor: this.constructor.name,
-      timestamp: new Date().getTime()
+      processor: this.constructor.name
     });
   }
 
@@ -74,8 +70,8 @@ export class MailService {
     const options = this.mergeOptions(job.data);
 
     if (!this.validateOptions(options)) {
-      return this.logger.error({
-        message: 'Mail options could not be validated.',
+      return this.log.error({
+        message: 'Mail options could not be validated',
         data: options
       });
     }
@@ -93,10 +89,10 @@ export class MailService {
 
     if (!this.validateOptions(options)) {
       const errorObject = {
-        message: 'Mail options could not be validated.',
+        message: 'Mail options could not be validated',
         data: options
       };
-      this.logger.error(errorObject);
+      this.log.error(errorObject);
       return errorObject;
     }
 
@@ -128,7 +124,7 @@ export class MailService {
         message: 'Mail options could not be validated.',
         data: options
       };
-      this.logger.error(errorObject);
+      this.log.error(errorObject);
       return errorObject;
     }
 
@@ -187,15 +183,15 @@ export class MailService {
    */
   private validateOptions(options: Mail.Options): boolean {
     if (!options.to) {
-      this.logger.error({
-        message: `Mail send failed: No 'to' address provided.`
+      this.log.error({
+        message: `Mail send failed: No 'to' address provided`
       });
       return false;
     }
 
     if (!options.from) {
-      this.logger.error({
-        message: `Mail send failed: No 'from' address provided.`
+      this.log.error({
+        message: `Mail send failed: No 'from' address provided`
       });
       return false;
     }

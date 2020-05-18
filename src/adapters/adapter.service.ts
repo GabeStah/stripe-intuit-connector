@@ -1,7 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { Logger } from 'winston';
+import { Injectable } from '@nestjs/common';
 import get from 'lodash/get';
 import round from 'lodash/round';
+import { LogService } from 'src/log/log.service';
 
 export enum ConversionType {
   None,
@@ -23,7 +23,7 @@ export abstract class Adapter implements AdapterInterface {
   protected source: any;
   protected target: any;
 
-  constructor(@Inject('winston') protected readonly logger: Logger) {}
+  constructor(protected readonly log: LogService) {}
 
   abstract from(source: any): any;
 

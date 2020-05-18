@@ -22,32 +22,49 @@ export class StripeCustomerToIntuitCustomer extends StripeIntuitAdapterService {
    */
   from(source: any): any {
     this.source = source;
-    return {
-      PrimaryEmailAddr: {
-        Address: this.get('email')
-      },
-      DisplayName: `${this.get('name')} [${toStripeId(this.get('id'))}]`,
-      GivenName: this.get('name'),
-      Notes: JSON.stringify({
-        stripe: {
-          id: this.get('id'),
-          username: this.get('metadata.username')
+    try {
+      this.log.event(this.constructor.name, {
+        source
+      });
+
+      const result = {
+        PrimaryEmailAddr: {
+          Address: this.get('email')
+        },
+        DisplayName: `${this.get('name')} [${toStripeId(this.get('id'))}]`,
+        GivenName: this.get('name'),
+        Notes: JSON.stringify({
+          stripe: {
+            id: this.get('id'),
+            username: this.get('metadata.username')
+          }
+        }),
+        PrimaryPhone: {
+          FreeFormNumber: this.get('phone')
+        },
+        CompanyName: this.get('metadata.company_name'),
+        BillAddr: {
+          // REQUIRED_FOR_UPDATE
+          // Id: '3',
+          City: this.get('address.city'),
+          Line1: this.get('address.line1'),
+          Line2: this.get('address.line2'),
+          PostalCode: this.get('address.postal_code'),
+          Country: this.get('address.country'),
+          CountrySubDivisionCode: this.get('address.state')
         }
-      }),
-      PrimaryPhone: {
-        FreeFormNumber: this.get('phone')
-      },
-      CompanyName: this.get('metadata.company_name'),
-      BillAddr: {
-        // REQUIRED_FOR_UPDATE
-        // Id: '3',
-        City: this.get('address.city'),
-        Line1: this.get('address.line1'),
-        Line2: this.get('address.line2'),
-        PostalCode: this.get('address.postal_code'),
-        Country: this.get('address.country'),
-        CountrySubDivisionCode: this.get('address.state')
-      }
-    };
+      };
+
+      this.log.event(this.constructor.name, {
+        result
+      });
+
+      return result;
+    } catch (e) {
+      this.log.error({
+        event: this.constructor.name,
+        error: e
+      });
+    }
   }
 }

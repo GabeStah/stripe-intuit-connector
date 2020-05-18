@@ -161,7 +161,7 @@ export class IntuitService {
     if (result.name && result.name === 'Error') {
       this.log.error(result.message);
     } else {
-      this.log.event('healthcheck', 'Success');
+      this.log.event('healthcheck', '✅ Success');
     }
     return response;
   }

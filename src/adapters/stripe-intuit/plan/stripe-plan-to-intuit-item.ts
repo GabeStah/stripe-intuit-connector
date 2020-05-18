@@ -24,24 +24,40 @@ export class StripePlanToIntuitItem extends StripeIntuitAdapterService {
    */
   from(source: any, method?: 'create' | 'delete' | 'update'): any {
     this.source = source;
-    const obj = {
-      Active: !!this.get('active'),
-      Description: this.get('description'),
-      IncomeAccountRef: {
-        name: config.get('services.intuit.settings.account.default.name'),
-        value: config.get('services.intuit.settings.account.default.id')
-      },
-      Name: `${this.get('product.name')} [${this.get('product.id')}]:${this.get(
-        'product.name'
-      )} [${this.get('nickname')}]`,
-      Sku: `${this.get('product.id')}.${this.get('id')}`,
-      Type: 'Service'
-    };
-    if (method && method === 'update') {
-      // Override Name because update API doesn't like categorization colon separator
-      obj.Name = `${this.get('product.name')} [${this.get('nickname')}]`;
-    }
+    try {
+      this.log.event(this.constructor.name, {
+        method,
+        source
+      });
 
-    return obj;
+      const result = {
+        Active: !!this.get('active'),
+        Description: this.get('description'),
+        IncomeAccountRef: {
+          name: config.get('services.intuit.settings.account.name'),
+          value: config.get('services.intuit.settings.account.id')
+        },
+        Name: `${this.get('product.name')} [${this.get(
+          'product.id'
+        )}]:${this.get('product.name')} [${this.get('nickname')}]`,
+        Sku: `${this.get('product.id')}.${this.get('id')}`,
+        Type: 'Service'
+      };
+      if (method && method === 'update') {
+        // Override Name because update API doesn't like categorization colon separator
+        result.Name = `${this.get('product.name')} [${this.get('nickname')}]`;
+      }
+
+      this.log.event(this.constructor.name, {
+        result
+      });
+
+      return result;
+    } catch (e) {
+      this.log.error({
+        event: this.constructor.name,
+        error: e
+      });
+    }
   }
 }

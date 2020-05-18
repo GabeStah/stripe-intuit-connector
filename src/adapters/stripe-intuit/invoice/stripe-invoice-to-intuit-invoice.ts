@@ -25,10 +25,19 @@ export class StripeInvoiceToIntuitInvoice extends StripeIntuitAdapterService {
   async from(source: any) {
     this.source = source;
     try {
+      this.log.event(this.constructor.name, {
+        source
+      });
+
       const intuitCustomer = await this.intuit.read({
         type: IntuitEntityType.Customer,
         id: this.get('customer')
       });
+
+      this.log.event(this.constructor.name, {
+        intuitCustomer
+      });
+
       const lineData = this.get('lines.data');
       const lines = [];
       for (const line of lineData) {
@@ -80,7 +89,7 @@ export class StripeInvoiceToIntuitInvoice extends StripeIntuitAdapterService {
         }
       }
 
-      return {
+      const result = {
         DocNumber: toStripeId(this.get('id')),
         CustomerRef: {
           // Intuit Customer Id
@@ -88,9 +97,17 @@ export class StripeInvoiceToIntuitInvoice extends StripeIntuitAdapterService {
         },
         Line: lines
       };
+
+      this.log.event(this.constructor.name, {
+        result
+      });
+
+      return result;
     } catch (e) {
-      this.log.error(e);
-      throw e;
+      this.log.error({
+        event: this.constructor.name,
+        error: e
+      });
     }
   }
 }

@@ -25,15 +25,29 @@ export class StripeInvoiceToIntuitPayment extends StripeIntuitAdapterService {
   async from(source: any) {
     this.source = source;
     try {
+      this.log.event(this.constructor.name, {
+        source
+      });
+
       const intuitCustomer = await this.intuit.read({
         type: IntuitEntityType.Customer,
         id: this.get('customer')
       });
+
+      this.log.event(this.constructor.name, {
+        intuitCustomer
+      });
+
       const lines = [];
       const intuitInvoice = await this.intuit.read({
         type: IntuitEntityType.Invoice,
         id: this.get('id')
       });
+
+      this.log.event(this.constructor.name, {
+        intuitInvoice
+      });
+
       if (!intuitInvoice) {
         throw new Error(
           `Could not create Intuit Payment (no matching Item found matching Stripe Plan).`
@@ -48,8 +62,12 @@ export class StripeInvoiceToIntuitPayment extends StripeIntuitAdapterService {
           }
         ]
       });
-      return {
-        PaymentRefNum: toStripeId(this.get('payment_intent')),
+
+      const result = {
+        // Invoices with no charge (i.e. free) have no payment_intent, so use invoice number instead
+        PaymentRefNum: this.get('payment_intent')
+          ? toStripeId(this.get('payment_intent'))
+          : this.get('number'),
         CustomerRef: {
           // Intuit Customer Id
           value: intuitCustomer.Id
@@ -65,9 +83,17 @@ export class StripeInvoiceToIntuitPayment extends StripeIntuitAdapterService {
           customer_name: this.get('customer_name')
         })
       };
+
+      this.log.event(this.constructor.name, {
+        result
+      });
+
+      return result;
     } catch (e) {
-      this.log.error(e);
-      throw e;
+      this.log.error({
+        event: this.constructor.name,
+        error: e
+      });
     }
   }
 }

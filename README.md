@@ -286,10 +286,10 @@ The following is the current implementation of Connector to handle Intuit API au
   Description: this.get('description'),
   IncomeAccountRef: {
     name: config.get(
-      'services.intuit.settings.account.default.name'
+      'services.intuit.settings.account.name'
     ),
     value: config.get(
-      'services.intuit.settings.account.default.id'
+      'services.intuit.settings.account.id'
     )
   },
   Name: `Widget [5 Sites]`,

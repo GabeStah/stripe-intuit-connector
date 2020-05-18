@@ -75,10 +75,18 @@ export class StripeWebhookQueueService extends BaseQueueService {
           });
         case StripeWebhookEventTypes.invoice.payment_succeeded:
           stripeObject = job.data.data.object;
-          return this.stripeIntuitAdapter.create({
-            data: await this.invoicePaymentAdapter.from(stripeObject),
-            type: IntuitEntityType.Payment
-          });
+          // Intuit won't accept Payment of "0", so cancel out if free
+          if (stripeObject.amount_paid === 0) {
+            this.log.event('invoice.payment_succeeded', {
+              message:
+                'No amount paid; aborting Intuit Payment object creation.'
+            });
+          } else {
+            return this.stripeIntuitAdapter.create({
+              data: await this.invoicePaymentAdapter.from(stripeObject),
+              type: IntuitEntityType.Payment
+            });
+          }
         case StripeWebhookEventTypes.plan.created:
           stripeObject = job.data.data.object;
           // Find existing product
@@ -87,9 +95,12 @@ export class StripeWebhookQueueService extends BaseQueueService {
           if (product) {
             stripeObject.product = product;
           } else {
-            throw new Error(
-              `Could not find Stripe Product for Plan: ${stripeObject.id}.`
-            );
+            const message = `Could not find Stripe Product for Plan: ${stripeObject.id}.`;
+            this.log.error({
+              message: message,
+              object: stripeObject
+            });
+            throw new Error(message);
           }
 
           return this.stripeIntuitAdapter.create({
@@ -112,9 +123,12 @@ export class StripeWebhookQueueService extends BaseQueueService {
           if (product) {
             stripeObject.product = product;
           } else {
-            throw new Error(
-              `Could not find Stripe Product for Plan: ${stripeObject.id}.`
-            );
+            const message = `Could not find Stripe Product for Plan: ${stripeObject.id}.`;
+            this.log.error({
+              message: message,
+              object: stripeObject
+            });
+            throw new Error(message);
           }
 
           return this.stripeIntuitAdapter.update({

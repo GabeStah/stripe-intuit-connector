@@ -49,10 +49,15 @@ export class StripeIntuitAdapterService extends Adapter {
       type,
       id
     });
+
     // Find existing
     const existing = await this.intuit.read({
       type: type,
       id: id
+    });
+
+    this.log.event('stripe_intuit_adapter.delete.existing', {
+      existing
     });
 
     if (existing) {
@@ -71,11 +76,16 @@ export class StripeIntuitAdapterService extends Adapter {
       data,
       column
     });
+
     // Find existing
     const existing = await this.intuit.read({
       column,
       type: type,
       id: id
+    });
+
+    this.log.event('stripe_intuit_adapter.update.existing', {
+      existing
     });
 
     // Merge new and existing then update.

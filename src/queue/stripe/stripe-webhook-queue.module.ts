@@ -5,7 +5,7 @@ import { IntuitModule } from 'src/intuit/intuit.module';
 import { StripeWebhookQueueService } from 'src/queue/stripe/stripe-webhook-queue.service';
 import { StripeIntuitAdapterModule } from 'src/adapters/stripe-intuit/stripe-intuit-adapter.module';
 import { StripeIntuitAdapterService } from 'src/adapters/stripe-intuit/stripe-intuit-adapter.service';
-import config from 'src/config/config';
+import config from 'src/config';
 
 @Module({
   imports: [

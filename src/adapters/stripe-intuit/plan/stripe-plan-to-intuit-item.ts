@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { StripeIntuitAdapterService } from 'src/adapters/stripe-intuit/stripe-intuit-adapter.service';
-import config from 'src/config/config';
+import config from 'src/config';
 
 /**
  * Adapter to convert from Stripe Plan to Intuit Item object.

@@ -1,7 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Adapter } from 'src/adapters/adapter.service';
 import { IntuitEntityType, IntuitService } from 'src/intuit/intuit.service';
-import { Logger } from 'winston';
+import { LogService } from 'src/log/log.service';
 
 interface CreateParams {
   data: any;
@@ -26,13 +26,18 @@ interface UpdateParams {
 @Injectable()
 export class StripeIntuitAdapterService extends Adapter {
   constructor(
-    @Inject('winston') protected readonly logger: Logger,
+    protected readonly log: LogService,
     protected readonly intuit: IntuitService
   ) {
-    super(logger);
+    super(log);
   }
 
   async create({ type, data }: CreateParams) {
+    this.log.event('stripe_intuit_adapter.create', {
+      type,
+      data
+    });
+
     return this.intuit.create({
       type: type,
       data: data
@@ -40,6 +45,10 @@ export class StripeIntuitAdapterService extends Adapter {
   }
 
   async delete({ type, id }: DeleteParams) {
+    this.log.event('stripe_intuit_adapter.delete', {
+      type,
+      id
+    });
     // Find existing
     const existing = await this.intuit.read({
       type: type,
@@ -56,6 +65,12 @@ export class StripeIntuitAdapterService extends Adapter {
   }
 
   async update({ type, data, id, column }: UpdateParams) {
+    this.log.event('stripe_intuit_adapter.update', {
+      type,
+      id,
+      data,
+      column
+    });
     // Find existing
     const existing = await this.intuit.read({
       column,

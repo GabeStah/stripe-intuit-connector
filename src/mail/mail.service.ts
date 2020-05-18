@@ -34,9 +34,8 @@ export class MailService {
    */
   @OnQueueActive()
   private onActive(job: Job) {
-    this.log.debug({
+    this.log.event(`${config.get('queue.mail.name')}.started`, {
       data: job.data,
-      event: 'started',
       id: job.id,
       name: job.name,
       processor: this.constructor.name
@@ -50,9 +49,8 @@ export class MailService {
    */
   @OnQueueCompleted()
   private onCompleted(job: Job) {
-    this.log.debug({
+    this.log.event(`${config.get('queue.mail.name')}.completed`, {
       data: job.data,
-      event: 'completed',
       id: job.id,
       name: job.name,
       processor: this.constructor.name

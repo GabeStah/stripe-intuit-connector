@@ -32,6 +32,10 @@ export class StripeController {
       );
 
       if (isStripeEvent(event.type)) {
+        this.log.event('stripe.webhook', {
+          type: event.type,
+          data: event
+        });
         const job = await this.queue.add(event, {
           jobId: uniqid(),
           attempts: 5

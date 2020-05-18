@@ -7,26 +7,31 @@ interface LogParams {
   data: LogData;
   level?: string;
   status?: number;
+  event?: string;
 }
 
 @Injectable()
 export class LogService {
   constructor(@Inject('winston') private readonly logger: Logger) {}
 
-  private static getOutputObject({ data, status = 200 }: LogParams) {
+  private static getOutputObject({ data, event, status = 200 }: LogParams) {
     const now = new Date();
-    return {
+    const obj: any = {
       data: data,
       status: status,
-      timestamp: now.getTime(),
-      timestampISO: now.toISOString()
+      timestamp: now.getTime()
     };
+    if (event) {
+      obj.event = event;
+    }
+    return obj;
   }
 
-  public log(data, status = 200, level = 'debug') {
+  public log({ data, status = 200, event, level = 'debug' }: LogParams) {
     const outputObject = LogService.getOutputObject({
-      data: data,
-      status: status
+      data,
+      event,
+      status
     });
     switch (level) {
       case 'debug':
@@ -34,6 +39,9 @@ export class LogService {
         break;
       case 'error':
         this.logger.error(outputObject);
+        break;
+      case 'event':
+        this.logger.info(outputObject);
         break;
       case 'queue':
         this.logger.notice(outputObject);
@@ -45,14 +53,23 @@ export class LogService {
   }
 
   public debug(data: LogData, status = 200) {
-    return this.log(data, status, 'debug');
+    return this.log({ data: data, status: status, level: 'debug' });
   }
 
   public error(data: LogData, status = 403) {
-    return this.log(data, status, 'error');
+    return this.log({ data: data, status: status, level: 'error' });
+  }
+
+  public event(name: string, data: LogData, status = 200) {
+    return this.log({
+      data: data,
+      event: name,
+      status: status,
+      level: 'event'
+    });
   }
 
   public queue(data: LogData, status = 200) {
-    return this.log(data, status, 'queue');
+    return this.log({ data: data, status: status, level: 'queue' });
   }
 }

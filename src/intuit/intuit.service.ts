@@ -161,7 +161,7 @@ export class IntuitService {
     if (result.name && result.name === 'Error') {
       this.log.error(result.message);
     } else {
-      this.log.debug(response);
+      this.log.event('healthcheck', 'Success');
     }
     return response;
   }
@@ -268,6 +268,10 @@ export class IntuitService {
       let response;
       switch (method) {
         case HttpMethod.GET:
+          // Log event
+          this.log.event('intuit.request.get', {
+            url
+          });
           response = await this.httpService
             .get(url, {
               headers: await this.intuitAuthService.getAuthorizationHeaders()
@@ -275,6 +279,11 @@ export class IntuitService {
             .toPromise();
           break;
         case HttpMethod.POST:
+          // Log event
+          this.log.event('intuit.request.post', {
+            data,
+            url
+          });
           response = await this.httpService
             .post(url, data, {
               headers: await this.intuitAuthService.getAuthorizationHeaders()

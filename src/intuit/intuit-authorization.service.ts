@@ -94,8 +94,13 @@ export class IntuitAuthorizationService implements OnModuleInit {
     );
     if (response) {
       this.authTokens = updated;
+      this.log.event('tokens.updated', this.authTokens);
+    } else {
+      this.log.error({
+        message: 'tokens.updated.failed',
+        tokens: this.authTokens
+      });
     }
-    this.log.event('tokens.updated', this.authTokens);
     return this.authTokens;
   }
 
@@ -130,13 +135,6 @@ export class IntuitAuthorizationService implements OnModuleInit {
    * Get Intuit Authorization Bearer token object.
    */
   async getAuthorizationHeaders(): Promise<any> {
-    // Check for valid local
-    if (this.areTokensValid()) {
-      return {
-        Authorization: `Bearer ${this.authTokens.accessToken}`
-      };
-    }
-
     // Update from tokens cache.
     await this.updateTokensFromDb();
 

@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { MailService } from 'src/mail/mail.service';
 import { MailController } from 'src/mail/mail.controller';
 import { BullModule } from '@nestjs/bull';
-import config from 'src/config/config';
+import config from 'src/config';
 
 @Module({
   imports: [

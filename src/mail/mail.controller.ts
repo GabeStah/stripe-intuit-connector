@@ -1,10 +1,10 @@
-import { Controller, Inject, Post, Req, Res } from '@nestjs/common';
+import { Controller, Post, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { Logger } from 'winston';
 import { MailService } from 'src/mail/mail.service';
 import { InjectQueue } from '@nestjs/bull';
-import config from 'src/config/config';
+import config from 'src/config';
 import { Queue } from 'bull';
+import { LogService } from 'src/log/log.service';
 
 @Controller('mail')
 export class MailController {
@@ -12,7 +12,7 @@ export class MailController {
     private readonly service: MailService,
     @InjectQueue(config.get('queue.mail.name'))
     private readonly queue: Queue,
-    @Inject('winston') private readonly logger: Logger
+    private readonly log: LogService
   ) {}
 
   @Post('send')

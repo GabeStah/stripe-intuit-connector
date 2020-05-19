@@ -1,16 +1,16 @@
-import { Controller, Get, Inject, Req, Res } from '@nestjs/common';
+import { Controller, Get, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { IntuitService } from 'src/intuit/intuit.service';
-import { Logger } from 'winston';
 import { MessagePattern } from '@nestjs/microservices';
 import { IntuitAuthorizationService } from 'src/intuit/intuit-authorization.service';
+import { LogService } from 'src/log/log.service';
 
 @Controller('intuit')
 export class IntuitController {
   constructor(
     private readonly service: IntuitService,
     private readonly authService: IntuitAuthorizationService,
-    @Inject('winston') private readonly logger: Logger
+    private readonly log: LogService
   ) {}
 
   @Get('authorize')
@@ -28,6 +28,14 @@ export class IntuitController {
     return this.authService.callback(request);
   }
 
+  /**
+   * Check Intuit connectivity.
+   */
+  @Get('healthcheck')
+  async healthcheck(): Promise<object> {
+    return this.service.healthcheck();
+  }
+
   // @Get('redis')
   // redis(): any {
   //   return this.service.redis();
@@ -35,7 +43,6 @@ export class IntuitController {
 
   @MessagePattern({ type: 'redis_test' })
   redisMessage(data: any): string {
-    console.log(data);
     return data;
   }
 }

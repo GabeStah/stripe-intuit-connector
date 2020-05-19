@@ -1,5 +1,4 @@
-import { HttpService, Inject, Injectable } from '@nestjs/common';
-import { Logger } from 'winston';
+import { HttpService, Injectable } from '@nestjs/common';
 import { Client, ClientRedis } from '@nestjs/microservices';
 import { MailService } from 'src/mail/mail.service';
 import { RedisService } from 'src/redis/redis.service';
@@ -7,7 +6,8 @@ import { IntuitAuthorizationService } from 'src/intuit/intuit-authorization.serv
 import QueryString from 'query-string';
 import { toStripeId } from 'src/queue/stripe/stripe-webhook-queue.constants';
 import { Transport } from '@nestjs/common/enums/transport.enum';
-import config from 'src/config/config';
+import config from 'src/config';
+import { LogService } from 'src/log/log.service';
 
 enum HttpMethod {
   GET,
@@ -48,7 +48,8 @@ interface ReadParams {
 }
 
 interface QueryParams {
-  id: number | string;
+  column?: string;
+  id?: number | string;
   type: IntuitEntityType;
 }
 
@@ -75,7 +76,7 @@ export class IntuitService {
     private readonly intuitAuthService: IntuitAuthorizationService,
     private readonly mailService: MailService,
     private readonly redisService: RedisService,
-    @Inject('winston') private readonly logger: Logger
+    private readonly log: LogService
   ) {}
 
   /**
@@ -129,7 +130,50 @@ export class IntuitService {
    * @param id - Typically Stripe Id as stored in search column.
    * @param column? - Explicitly overrides lookup column.
    */
-  protected async find({ type, id, column }: FindParams) {
+  async find({ type, id, column }: FindParams) {
+    const result = await this.query({ type, id, column });
+    if (!result) {
+      // No result, error out
+      this.log.error({
+        message: 'Could not retrieve Intuit record',
+        data: { type, id }
+      });
+      throw new Error(
+        `Could not retrieve Intuit record: Type: ${type}, Id: ${id}.`
+      );
+    }
+    return result;
+  }
+
+  /**
+   * Check Intuit connectivity.
+   */
+  async healthcheck() {
+    const result = await this.query({
+      type: IntuitEntityType.CompanyInfo
+    });
+
+    const response = {
+      event: 'healthcheck',
+      message: 'Success'
+    };
+
+    if (result.name && result.name === 'Error') {
+      this.log.error(result.message);
+    } else {
+      this.log.event('healthcheck', 'Success');
+    }
+    return response;
+  }
+
+  /**
+   * Query for specific entity type, with optional column + id where clause.
+   *
+   * @param type
+   * @param id
+   * @param column
+   */
+  async query({ type, id, column }: QueryParams) {
     if (!column) {
       switch (type) {
         case IntuitEntityType.Customer:
@@ -144,13 +188,21 @@ export class IntuitService {
         case IntuitEntityType.Payment:
           column = 'PaymentRefNum';
           break;
-        default:
-          return {};
       }
     }
-    const url = this.buildUrl(`query`, {
-      query: `SELECT * FROM ${type} WHERE ${column} LIKE '%${id}%'`
+
+    // Get every record of type
+    let url = this.buildUrl(`query`, {
+      query: `SELECT * FROM ${type}`
     });
+
+    if (column && id) {
+      // Perform more explicit query
+      url = this.buildUrl(`query`, {
+        query: `SELECT * FROM ${type} WHERE ${column} LIKE '%${id}%'`
+      });
+    }
+
     const result = await this.request({ method: HttpMethod.GET, url: url });
     if (
       result.hasOwnProperty('QueryResponse') &&
@@ -160,28 +212,9 @@ export class IntuitService {
       // Return first result, actual object
       return result.QueryResponse[type][0];
     } else {
-      // No result, error out
-      this.logger.error({
-        message: 'Could not retrieve Intuit record.',
-        data: { type, id }
-      });
-      throw new Error(
-        `Could not retrieve Intuit record: Type: ${type}, Id: ${id}.`
-      );
+      this.log.error(result);
+      return result;
     }
-  }
-
-  /**
-   * TODO: Add query
-   *
-   * @param type
-   * @param id
-   */
-  async query({ type, id }: QueryParams) {
-    const url = this.buildUrl(`query`, {
-      query: `SELECT * FROM ${type} WHERE DisplayName LIKE '%${id}%'`
-    });
-    return this.request({ method: HttpMethod.GET, url: url });
   }
 
   /**
@@ -235,6 +268,10 @@ export class IntuitService {
       let response;
       switch (method) {
         case HttpMethod.GET:
+          // Log event
+          this.log.event('intuit.request.get', {
+            url
+          });
           response = await this.httpService
             .get(url, {
               headers: await this.intuitAuthService.getAuthorizationHeaders()
@@ -242,6 +279,11 @@ export class IntuitService {
             .toPromise();
           break;
         case HttpMethod.POST:
+          // Log event
+          this.log.event('intuit.request.post', {
+            data,
+            url
+          });
           response = await this.httpService
             .post(url, data, {
               headers: await this.intuitAuthService.getAuthorizationHeaders()
@@ -254,18 +296,18 @@ export class IntuitService {
       if (err.response) {
         // The request was made and the server responded with a status code
         // that falls out of the range of 2xx
-        this.logger.error(err.response.data);
+        this.log.error(err.response.data);
         return err;
         // return err.response;
       } else if (err.request) {
         // The request was made but no response was received
         // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
         // http.ClientRequest in node.js
-        this.logger.error(err.request);
+        this.log.error(err.request);
         return err.request;
       } else {
         // Something happened in setting up the request that triggered an Error
-        this.logger.error(err.message);
+        this.log.error(err.message);
         return err.message;
       }
     }

@@ -63,7 +63,7 @@ At its core, Connector actively listens for an incoming webhook request from Str
 
 ### Environment Configuration
 
-The configuration schema is defined in the [src/config/config.ts](src/config/config.ts) file using Mozilla's [Convict](https://github.com/mozilla/node-convict/tree/master/packages/convict) package and schema specification.
+The configuration schema is defined in the [src/config/index.ts](src/config/index.ts) file using Mozilla's [Convict](https://github.com/mozilla/node-convict/tree/master/packages/convict) package and schema specification.
 
 To update an environment-specific value just update the appropriate `[environment].json` file in the `/config` directory.
 

@@ -1,6 +1,6 @@
 {
   "name": "wcasg-connector",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Headless API for connecting Stripe :: QuickBooks Online.",
   "author": "Gabe Wyatt <gabe@solarixdigital.com>",
   "license": "MIT",

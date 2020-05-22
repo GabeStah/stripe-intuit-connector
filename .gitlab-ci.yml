@@ -6,6 +6,7 @@ stages:
   - test
   - deploy
   - healthcheck
+  - release
 
 ### Variables
 # See: https://gitlab.com/gitlab-org/gitlab-runner/-/issues/1809
@@ -38,7 +39,9 @@ variables:
 ### Testing
 .testing_template: &testing_template
   only:
-    - testing
+    - branches
+  except:
+    - master
   variables:
     DEPLOY_ENDPOINT: 'connector.widget.wcasg.solarix.dev'
     SSH_PRIVATE_KEY: $SSH_PRIVATE_KEY_TESTING
@@ -141,4 +144,17 @@ production:healthcheck:
   <<: *production_template
   script:
     - *all_health_check_script
+
+production:release:
+  stage: release
+  only:
+    - master
+  environment:
+    name: production
+  image: node:12-buster-slim
+  before_script:
+    - apt-get update && apt-get install -y --no-install-recommends git-core ca-certificates
+    - npm install -g semantic-release @semantic-release/gitlab @semantic-release/git conventional-changelog-conventionalcommits
+  script:
+    - semantic-release
 ### End Production

@@ -1,4 +1,9 @@
-import { OnQueueActive, OnQueueStalled, Processor } from '@nestjs/bull';
+import {
+  OnQueueActive,
+  OnQueueFailed,
+  OnQueueStalled,
+  Processor
+} from '@nestjs/bull';
 import { Injectable } from '@nestjs/common';
 import { Job } from 'bull';
 import { LogService } from 'src/log/log.service';
@@ -11,6 +16,17 @@ export abstract class BaseQueueService {
   @OnQueueActive()
   onActive(job: Job) {
     this.log.event('queue.active', {
+      event_id: job.data.id,
+      job_id: job.id,
+      name: job.name,
+      processor: this.constructor.name
+    });
+  }
+
+  @OnQueueFailed()
+  onFailed(job: Job, error) {
+    this.log.error({
+      error: error,
       event_id: job.data.id,
       job_id: job.id,
       name: job.name,

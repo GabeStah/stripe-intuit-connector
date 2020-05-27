@@ -99,7 +99,7 @@ export class MailService {
       options,
       {
         jobId: uniqid(),
-        attempts: 5
+        attempts: config.get('queue.attempts')
       }
     );
 
@@ -131,7 +131,7 @@ export class MailService {
       options,
       {
         jobId: uniqid(),
-        attempts: 5
+        attempts: config.get('queue.attempts')
       }
     );
 

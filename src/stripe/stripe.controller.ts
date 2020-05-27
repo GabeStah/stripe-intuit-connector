@@ -38,7 +38,7 @@ export class StripeController {
         });
         const job = await this.queue.add(event, {
           jobId: uniqid(),
-          attempts: 5
+          attempts: config.get('queue.attempts')
         });
 
         return response.json({ message: `Job (${job.id}) queued.` });

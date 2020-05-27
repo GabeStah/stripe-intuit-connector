@@ -77,9 +77,13 @@ export class StripeWebhookQueueService extends BaseQueueService {
           stripeObject = job.data.data.object;
           // Intuit won't accept Payment of "0", so cancel out if free
           if (stripeObject.amount_paid === 0) {
+            const message =
+              'No amount paid; aborting Intuit Payment object creation.';
             this.log.event('invoice.payment_succeeded', {
-              message:
-                'No amount paid; aborting Intuit Payment object creation.'
+              message
+            });
+            return Promise.reject({
+              message
             });
           } else {
             return this.stripeIntuitAdapter.create({

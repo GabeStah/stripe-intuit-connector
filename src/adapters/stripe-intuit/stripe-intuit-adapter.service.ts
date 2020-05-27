@@ -60,13 +60,17 @@ export class StripeIntuitAdapterService extends Adapter {
       existing
     });
 
-    if (existing) {
-      // existingCustomer.Active = false;
-      return this.intuit.delete({
-        type: type,
-        data: existing
-      });
+    if (!existing) {
+      return Promise.reject(
+        new Error(
+          `Could not find an existing Intuit record type: ${type}, id: ${id}.`
+        )
+      );
     }
+    return this.intuit.delete({
+      type: type,
+      data: existing
+    });
   }
 
   async update({ type, data, id, column }: UpdateParams) {

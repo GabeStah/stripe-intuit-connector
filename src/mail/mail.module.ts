@@ -12,6 +12,12 @@ import config from 'src/config';
         host: config.get('db.redis.host'),
         port: config.get('db.redis.port'),
         name: config.get('queue.mail.db.name')
+      },
+      defaultJobOptions: {
+        backoff: {
+          delay: config.get('queue.delay'),
+          type: config.get('queue.backoff')
+        }
       }
     })
   ],

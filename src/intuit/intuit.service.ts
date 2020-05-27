@@ -142,7 +142,7 @@ export class IntuitService {
         `Could not retrieve Intuit record: Type: ${type}, Id: ${id}.`
       );
     }
-    return result;
+    return Promise.resolve(result);
   }
 
   /**
@@ -160,10 +160,11 @@ export class IntuitService {
 
     if (result.name && result.name === 'Error') {
       this.log.error(result.message);
+      return Promise.reject(result.message);
     } else {
       this.log.event('healthcheck', '✅ Success');
     }
-    return response;
+    return Promise.resolve(response);
   }
 
   /**
@@ -210,10 +211,10 @@ export class IntuitService {
       result.QueryResponse[type].length >= 1
     ) {
       // Return first result, actual object
-      return result.QueryResponse[type][0];
+      return Promise.resolve(result.QueryResponse[type][0]);
     } else {
       this.log.error(result);
-      return result;
+      return Promise.resolve(result);
     }
   }
 
@@ -291,24 +292,24 @@ export class IntuitService {
             .toPromise();
           break;
       }
-      return response.data;
+      return Promise.resolve(response.data);
     } catch (err) {
       if (err.response) {
         // The request was made and the server responded with a status code
         // that falls out of the range of 2xx
         this.log.error(err.response.data);
-        return err;
+        return Promise.reject(err);
         // return err.response;
       } else if (err.request) {
         // The request was made but no response was received
         // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
         // http.ClientRequest in node.js
         this.log.error(err.request);
-        return err.request;
+        return Promise.reject(err.request);
       } else {
         // Something happened in setting up the request that triggered an Error
         this.log.error(err.message);
-        return err.message;
+        return Promise.reject(err.message);
       }
     }
   }

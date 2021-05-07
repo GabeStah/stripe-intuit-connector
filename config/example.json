@@ -1,0 +1,47 @@
+{
+  "mail": {
+    "adminAlertAddress": "gabe@gabewyatt.com",
+    "host": "smtp.ethereal.email",
+    "username": "example@ethereal.email",
+    "password": "<password>"
+  },
+  "routes": {
+    "root": "http://connector.test:4321"
+  },
+  "security": {
+    "ssl": {
+      "enabled": false
+    }
+  },
+  "services": {
+    "aws": {
+      "cloudwatch": {
+        "logStreamName": "widget/connector/development/log"
+      }
+    },
+    "intuit": {
+      "api": {
+        "url": "sandbox-quickbooks.api.intuit.com"
+      },
+      "auth": {
+        "clientId": "<id>",
+        "clientSecret": "<secret>"
+      },
+      "company": "<companyId>",
+      "environment": "sandbox",
+      "settings": {
+        "account": {
+          "id": 1,
+          "name": "Services"
+        }
+      }
+    },
+    "stripe": {
+      "key": "pk_test_abc123",
+      "secret": "rk_test_abc123",
+      "webhook": {
+        "secret": "whsec_abc123"
+      }
+    }
+  }
+}

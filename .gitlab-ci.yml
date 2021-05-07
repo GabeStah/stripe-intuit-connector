@@ -153,7 +153,7 @@ production:release:
     name: production
   image: node:12-buster-slim
   before_script:
-    - apt-get update && apt-get install -y --no-install-recommends git-core ca-certificates
+    - apt-get update && apt-get install -y --no-install-recommends git-core ca-certificates openssh-client
     - npm install -g semantic-release @semantic-release/gitlab @semantic-release/git conventional-changelog-conventionalcommits
   script:
     - semantic-release

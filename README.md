@@ -1,3 +1,7 @@
+# Stripe :: QuickBooks Online Connector
+
+Headless API that connects Stripe to QuickBooks Online.
+
 - [Installation](#installation)
 - [Running Connector](#running-connector)
 - [Usage](#usage)

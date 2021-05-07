@@ -40,3 +40,7 @@ lerna-debug.log*
 /_notes/
 /docker/redis/redis.conf
 /cert/
+
+/config/development.json
+/config/testing.json
+/config/production.json
